@@ -1,0 +1,22 @@
+# code-review-graph ignore file
+# Ignore directories that shouldn't be analyzed in the knowledge graph
+
+node_modules
+vendor
+storage
+bootstrap/cache
+public/build
+public/hot
+public/storage
+.git
+.idea
+.vscode
+.cursor
+.zed
+.phpunit.cache
+*.log
+.env*
+Homestead.json
+Homestead.yaml
+_ide_helper.php
+.phpactor.json
