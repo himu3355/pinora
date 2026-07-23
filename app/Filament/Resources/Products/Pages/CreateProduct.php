@@ -15,7 +15,16 @@ class CreateProduct extends CreateRecord
         $data['created_by'] = auth()->id();
 
         if (empty($data['vendor_id'])) {
-            $data['vendor_id'] = Vendor::first()?->id;
+            $vendor = Vendor::first();
+            if (!$vendor) {
+                $vendor = Vendor::create([
+                    'user_id'    => auth()->id(),
+                    'store_name' => 'Pinora Store',
+                    'store_slug' => 'pinora-store',
+                    'status'     => 'approved',
+                ]);
+            }
+            $data['vendor_id'] = $vendor->id;
         }
 
         return $data;
