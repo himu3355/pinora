@@ -30,9 +30,14 @@ class ProductForm
             // ── 1. Basic Information ──────────────────────────────────
             Section::make('Basic Information')
                 ->schema([
-                    Hidden::make('vendor_id')
+                    Select::make('vendor_id')
+                        ->label('Vendor / Store')
+                        ->options(fn() => Vendor::pluck('store_name', 'id'))
+                        ->required()
+                        ->searchable()
+                        ->preload()
                         ->default(fn() => Vendor::first()?->id)
-                        ->required(),
+                        ->helperText('Select the vendor store that owns this product.'),
 
                     Grid::make(2)->schema([
 
