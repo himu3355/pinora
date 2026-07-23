@@ -42,13 +42,6 @@ class ProductsTable
                     ->weight('semibold')
                     ->limit(40),
 
-                TextColumn::make('vendor.store_name')
-                    ->label('Vendor')
-                    ->sortable()
-                    ->searchable()
-                    ->badge()
-                    ->color('info'),
-
                 TextColumn::make('creator.name')
                     ->label('Created By')
                     ->sortable()
@@ -114,15 +107,6 @@ class ProductsTable
                         'active'    => 'Active',
                         'inactive'  => 'Inactive',
                     ]),
-
-                SelectFilter::make('vendor_id')
-                    ->label('Vendor')
-                    ->options(
-                        Vendor::where('status', 'approved')
-                            ->orderBy('store_name')
-                            ->pluck('store_name', 'id')
-                    )
-                    ->searchable(),
 
                 SelectFilter::make('created_by')
                     ->label('Created By Admin')
