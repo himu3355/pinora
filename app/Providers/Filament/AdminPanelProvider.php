@@ -18,14 +18,22 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Redberry\PageBuilderPlugin\GlobalBlocksPlugin;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
             ->id('admin')
+            ->default()
+            ->resources([
+                \App\Filament\Resources\Roles\RoleResource::class,
+            ])
+            ->plugins([
+                GlobalBlocksPlugin::make()->enableGlobalBlocks(false),
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+            ])
             ->path('admin')
             ->login()
             ->colors([
@@ -38,8 +46,18 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                \App\Filament\Widgets\AdminStatsOverview::class,
+                \App\Filament\Widgets\RecentOrdersWidget::class,
+                \App\Filament\Widgets\PendingVendorsWidget::class,
+                \App\Filament\Widgets\PendingReviewsWidget::class,
+            ])
+            ->navigationGroups([
+                \Filament\Navigation\NavigationGroup::make('Vendors'),
+                \Filament\Navigation\NavigationGroup::make('Catalog'),
+                \Filament\Navigation\NavigationGroup::make('Orders'),
+                \Filament\Navigation\NavigationGroup::make('Customers'),
+                \Filament\Navigation\NavigationGroup::make('Content'),
+                \Filament\Navigation\NavigationGroup::make('Finance'),
             ])
             ->middleware([
                 EncryptCookies::class,

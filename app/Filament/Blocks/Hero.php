@@ -1,0 +1,80 @@
+<?php
+
+namespace App\Filament\Blocks;
+
+use Redberry\PageBuilderPlugin\Abstracts\BaseBlock;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\FileUpload;
+
+class Hero extends BaseBlock
+{
+    public static function getCategory(): string
+    {
+        return \App\Filament\BlockCategories\Products::class;
+    }
+
+    public static function getBlockSchema(): array
+    {
+        return [
+            TextInput::make('badge_text')
+                ->default('New Release')
+                ->maxLength(100),
+                
+            TextInput::make('heading')
+                ->required()
+                ->maxLength(255),
+                
+            Textarea::make('subheading')
+                ->rows(3)
+                ->maxLength(500),
+                
+            FileUpload::make('image')
+                ->image()
+                ->disk('public') // MUST use 'public' to allow public url access
+                ->directory('block-images'),
+        ];
+    }
+
+    public static function getView(): ?string
+    {
+        return 'admin.blocks.hero';
+    }
+
+    public static function getUrlForFile(array | string | null $path = null): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (is_array($path)) {
+            if (count($path) === 0) {
+                return null;
+            }
+            $path = array_values($path)[0];
+        }
+
+        // Resolve Livewire temporary upload object
+        if ($path instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+            return $path->temporaryUrl();
+        }
+
+        // Resolve temporary upload path strings (used during unsaved real-time previews)
+        if (is_string($path)) {
+            if (str_starts_with($path, 'livewire-tmp/') || str_contains($path, 'livewire-tmp')) {
+                try {
+                    $filename = basename($path);
+                    return \Livewire\Features\SupportFileUploads\TemporaryUploadedFile::createFromLivewire($filename)->temporaryUrl();
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Failed to generate temporary URL for block: " . $e->getMessage());
+                    return null;
+                }
+            }
+
+            // Resolve saved public files via symlink
+            return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
+        }
+
+        return null;
+    }
+}

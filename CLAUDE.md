@@ -36,3 +36,11 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes` for code review.
 3. Use `get_affected_flows` to understand impact.
 4. Use `query_graph` pattern="tests_for" to check coverage.
+
+## Documentation of Fixes & Updates in Plans
+
+**CRITICAL RULE: Always keep the plan markdown files in the `.ai/plans/` directory updated.**
+Whenever you implement a fix, optimize code, resolve a bug, or add a new feature, you must identify the corresponding plan markdown file (e.g. `42-frontend-layout.md`) and update its content to match the final actual code and implementation details.
+
+- **Check first**: Explore the `.ai/plans/` directory to locate the plan document relevant to your current task.
+- **Update plans**: Before finishing your work, update the layout, code blocks, instructions, and notes in the relevant plan markdown file so that it accurately reflects the completed fixes and updates.

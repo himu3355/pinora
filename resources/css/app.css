@@ -1,9 +1,242 @@
-@import 'tailwindcss';
-
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+  --color-gold: #C9A84C;
+  --color-gold-light: #E8D5A3;
+  --color-gold-dark: #9B7B2E;
+  --color-dark-bg: #1A1A2E;
+  --color-dark-card: #16213E;
+  --color-dark-surface: #0F3460;
+  --color-text-light: #F5F0E8;
+  --color-text-muted: #B0A9A0;
+  --color-border-gold: rgba(201, 168, 76, 0.25);
+  --font-primary: 'Cormorant Garamond', serif;
+  --font-secondary: 'Montserrat', sans-serif;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: var(--font-secondary);
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+    line-height: 1.6;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+  img {
+    max-width: 100%;
+    display: block;
+  }
+}
+
+/* Global Utility Classes */
+@utility section-padding {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+
+@utility text-muted {
+  color: var(--color-text-muted);
+}
+
+@utility font-primary {
+  font-family: var(--font-primary);
+}
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-family: var(--font-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+@utility btn-gold {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-gold-dark));
+  color: var(--color-dark-bg);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(201, 168, 76, 0.2);
+  }
+}
+
+@utility btn-outline-gold {
+  background: transparent;
+  border: 1px solid var(--color-gold);
+  color: var(--color-gold);
+  &:hover {
+    background: var(--color-gold);
+    color: var(--color-dark-bg);
+  }
+}
+
+@utility alert {
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+@utility alert-success {
+  background: rgba(40,167,69,0.15);
+  border: 1px solid rgba(40,167,69,0.4);
+  color: #6fcf97;
+}
+
+@utility alert-error {
+  background: rgba(220,53,69,0.15);
+  border: 1px solid rgba(220,53,69,0.4);
+  color: #f08080;
+}
+
+@utility alert-warning {
+  background: rgba(255,193,7,0.15);
+  border: 1px solid rgba(255,193,7,0.4);
+  color: #f2c94c;
+}
+
+/* Product Card Component Utility */
+@utility product-card {
+  background: var(--color-dark-card);
+  border: 1px solid var(--color-border-gold);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 20px rgba(201, 168, 76, 0.2);
+  }
+}
+
+@utility product-card-img {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #0d1b35;
+  & img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+}
+
+.product-card:hover .product-card-img img {
+  transform: scale(1.06);
+}
+
+@utility product-card-wishlist {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: rgba(26,26,46,0.8);
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: all 0.3s ease;
+  &:hover, &.active {
+    color: #e74c3c;
+  }
+}
+
+@utility product-card-body {
+  padding: 1rem;
+}
+
+@utility product-card-vendor {
+  font-size: 0.75rem;
+  color: var(--color-gold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+@utility product-card-name {
+  font-family: var(--font-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+@utility product-card-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-gold);
+}
+
+@utility product-card-price-original {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  margin-left: 0.5rem;
+}
+
+/* Custom scrollbar utility */
+@utility scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility gold-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 168, 76, 0.5) rgba(22, 33, 62, 0.5);
+  &::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(22, 33, 62, 0.5);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, rgba(201, 168, 76, 0.4), rgba(201, 168, 76, 0.8), rgba(201, 168, 76, 0.4));
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold);
+  }
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--color-dark-bg);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-dark-surface);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold);
+  }
 }
