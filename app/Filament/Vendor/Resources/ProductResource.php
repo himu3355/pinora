@@ -229,7 +229,7 @@ class ProductResource extends Resource
                                     'active'   => 'Active',
                                     'inactive' => 'Inactive',
                                 ])
-                                ->default('draft')
+                                ->default('active')
                                 ->required(),
                         ]),
 

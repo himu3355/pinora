@@ -8,6 +8,13 @@
     <title>@yield('title', 'Pinora — Timeless Jewellery')</title>
     <meta name="description" content="@yield('meta_description', 'Shop certified gold, silver & diamond jewellery from trusted artisan vendors across India.')">
 
+    <script>
+        window.PinoraConfig = {
+            baseUrl: "{{ url('/') }}",
+            shopUrl: "{{ route('shop.index') }}"
+        };
+    </script>
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('styles')

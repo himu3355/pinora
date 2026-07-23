@@ -1,4 +1,14 @@
 
+function getUrl(path) {
+    if (!path) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const base = (window.PinoraConfig && window.PinoraConfig.baseUrl)
+        ? window.PinoraConfig.baseUrl.replace(/\/$/, '')
+        : '';
+    const cleanPath = path.startsWith('/') ? path : '/' + path;
+    return base + cleanPath;
+}
+
 // Wishlist toggle helper (used on product cards)
 document.addEventListener('DOMContentLoaded', () => {
     // Helper to rebuild wishlist dropdown menu dynamically
@@ -24,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                 html += `
                     <div class="flex items-center justify-between gap-3 py-1.5 hover:bg-gray-50 rounded px-2" data-wishlist-item="${item.product_id}">
-                        <a href="/product/${item.slug}" class="flex items-center gap-3 flex-grow min-w-0">
+                        <a href="${getUrl('/product/' + item.slug)}" class="flex items-center gap-3 flex-grow min-w-0">
                             <img src="${item.image_url}" alt="${item.name}" class="w-12 h-12 object-cover rounded bg-gray-100 flex-shrink-0">
                             <div class="min-w-0">
                                 <h4 class="text-sm font-medium text-gray-900 truncate">${item.name}</h4>
@@ -47,7 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             e.stopPropagation();
             const productId = btn.dataset.wishlistToggle;
-            const res = await fetch(`/wishlist/toggle/${productId}`, {
+            const res = await fetch(getUrl('/wishlist/toggle/' + productId), {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -55,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
             });
             if (res.status === 401) {
-                window.location.href = '/login';
+                window.location.href = getUrl('/login');
                 return;
             }
             const data = await res.json();
@@ -398,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 
                 if (response.status === 401) {
-                    window.location.href = '/login';
+                    window.location.href = getUrl('/login');
                     return;
                 }
                 
@@ -438,7 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const productId = removeWishlistBtn.dataset.removeWishlist;
             
             try {
-                const res = await fetch(`/wishlist/toggle/${productId}`, {
+                const res = await fetch(getUrl('/wishlist/toggle/' + productId), {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -446,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                 });
                 if (res.status === 401) {
-                    window.location.href = '/login';
+                    window.location.href = getUrl('/login');
                     return;
                 }
                 const data = await res.json();
@@ -486,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const key = removeCartBtn.dataset.removeCart;
             
             try {
-                const res = await fetch(`/cart/${key}`, {
+                const res = await fetch(getUrl('/cart/' + key), {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -690,8 +700,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            const shopBaseUrl = (window.PinoraConfig && window.PinoraConfig.shopUrl)
+                ? window.PinoraConfig.shopUrl
+                : (window.location.origin + window.location.pathname.split('?')[0]);
             const separator = queryString ? '?' : '';
-            const fetchUrl = `/shop${separator}${queryString}`;
+            const fetchUrl = `${shopBaseUrl}${separator}${queryString}`;
 
             const response = await fetch(fetchUrl, {
                 headers: {
@@ -811,7 +824,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 const href = removeLink ? removeLink.getAttribute('href') : clearLink.getAttribute('href');
                 if (href) {
-                    const url = new URL(href, window.location.origin);
+                    const url = new URL(href, window.location.href);
                     fetchShopProducts(url.searchParams.toString());
                 }
             }
@@ -827,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 e.preventDefault();
                 const href = link.getAttribute('href');
                 if (href) {
-                    const url = new URL(href, window.location.origin);
+                    const url = new URL(href, window.location.href);
                     fetchShopProducts(url.searchParams.toString());
                 }
             }

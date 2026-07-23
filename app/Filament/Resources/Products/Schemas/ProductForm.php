@@ -239,7 +239,7 @@ class ProductForm
                                     'active' => 'Published/Active',
                                     'inactive'  => 'Inactive',
                                 ])
-                                ->default('draft')
+                                ->default('active')
                                 ->required(),
                         ]),
 

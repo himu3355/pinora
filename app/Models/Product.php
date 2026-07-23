@@ -218,16 +218,19 @@ class Product extends Model
         return $query->where('status', 'active')
             ->whereHas('vendor', function (Builder $vendorQuery) {
                 $vendorQuery->where('status', 'approved')
-                    ->whereHas('subscriptions', function (Builder $subQuery) {
-                        $subQuery->where(function (Builder $q) {
-                            $q->where('status', 'trialing')
-                              ->where('trial_ends_at', '>=', now());
-                        })->orWhere(function (Builder $q) {
-                            $q->where('status', 'active');
-                        })->orWhere(function (Builder $q) {
-                            $q->where('status', 'cancelled')
-                              ->where('ends_at', '>=', now());
-                        });
+                    ->where(function (Builder $q) {
+                        $q->whereDoesntHave('subscriptions')
+                          ->orWhereHas('subscriptions', function (Builder $subQuery) {
+                              $subQuery->where(function (Builder $sub) {
+                                  $sub->where('status', 'trialing')
+                                      ->where('trial_ends_at', '>=', now());
+                              })->orWhere(function (Builder $sub) {
+                                  $sub->where('status', 'active');
+                              })->orWhere(function (Builder $sub) {
+                                  $sub->where('status', 'cancelled')
+                                      ->where('ends_at', '>=', now());
+                              });
+                          });
                     });
             });
     }
