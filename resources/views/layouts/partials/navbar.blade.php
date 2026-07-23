@@ -62,7 +62,7 @@
 
             <li><a href="{{ route('shop.index', ['metal_type' => 'gold']) }}" class="text-[0.85rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Gold</a></li>
             <li><a href="{{ route('shop.index', ['metal_type' => 'silver']) }}" class="text-[0.85rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Silver</a></li>
-            <li><a href="{{ route('vendors.index') }}" class="text-[0.85rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Vendors</a></li>
+            {{-- <li><a href="{{ route('vendors.index') }}" class="text-[0.85rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Vendors</a></li> --}}
         </ul>
 
         {{-- Right Icons --}}
@@ -320,7 +320,7 @@
                 <li><a href="{{ route('shop.index') }}" class="block text-[0.95rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Shop All</a></li>
                 <li><a href="{{ route('shop.index', ['metal_type' => 'gold']) }}" class="block text-[0.95rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Gold Jewellery</a></li>
                 <li><a href="{{ route('shop.index', ['metal_type' => 'silver']) }}" class="block text-[0.95rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Silver Jewellery</a></li>
-                <li><a href="{{ route('vendors.index') }}" class="block text-[0.95rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Our Vendors</a></li>
+                {{-- <li><a href="{{ route('vendors.index') }}" class="block text-[0.95rem] tracking-wider uppercase text-text-muted font-medium hover:text-gold transition-colors duration-300">Our Vendors</a></li> --}}
             </ul>
 
             @if(isset($menuCategories) && $menuCategories->isNotEmpty())
