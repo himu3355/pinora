@@ -44,16 +44,23 @@ class ProductImage extends Model
         parent::boot();
 
         /**
+         * Before creating: if the product has no primary image yet,
+         * set this image as primary automatically.
+         */
+        static::creating(function (ProductImage $image): void {
+            if ($image->product_id && !static::where('product_id', $image->product_id)->where('is_primary', true)->exists()) {
+                $image->is_primary = true;
+            }
+        });
+
+        /**
          * Before saving: if is_primary is being set to true,
          * clear is_primary on every other image for the same product.
-         *
-         * We use the `saving` hook (fires on both create and update) so the
-         * constraint is enforced regardless of how the record is written.
          */
         static::saving(function (ProductImage $image): void {
-            if ($image->is_primary) {
+            if ($image->is_primary && $image->product_id) {
                 static::where('product_id', $image->product_id)
-                    ->where('id', '!=', $image->id ?? 0)  // 0 covers new (unsaved) records
+                    ->where('id', '!=', $image->id ?? 0)
                     ->update(['is_primary' => false]);
             }
         });
@@ -64,7 +71,7 @@ class ProductImage extends Model
          * without a primary image.
          */
         static::deleted(function (ProductImage $image): void {
-            if ($image->is_primary) {
+            if ($image->is_primary && $image->product_id) {
                 $next = static::where('product_id', $image->product_id)
                     ->orderBy('sort_order')
                     ->first();
@@ -89,11 +96,18 @@ class ProductImage extends Model
 
     /**
      * Returns the full public URL for this image.
-     * Uses Laravel's Storage facade so it works with local and S3 disks.
      */
     public function getUrlAttribute(): string
     {
-        return Storage::url($this->path);
+        if (empty($this->path)) {
+            return asset('images/product-placeholder.png');
+        }
+
+        if (\Illuminate\Support\Str::startsWith($this->path, ['http://', 'https://'])) {
+            return $this->path;
+        }
+
+        return asset('storage/' . ltrim($this->path, '/'));
     }
 
     /**

@@ -28,10 +28,12 @@ class ProductsTable
     {
         return $table
             ->columns([
-                ImageColumn::make('primaryImage.path')
-                    ->label('')
+                ImageColumn::make('image')
+                    ->label('Image')
+                    ->state(fn(Product $record) => $record->primaryImage?->path ?? $record->images->first()?->path)
+                    ->disk('public')
                     ->size(50)
-                    ->disk('public'),
+                    ->circular(),
 
                 TextColumn::make('name')
                     ->label('Product')

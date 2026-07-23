@@ -264,7 +264,8 @@ class ProductResource extends Resource
                             FileUpload::make('path')
                                 ->label('Image')
                                 ->image()
-                                ->directory('products')
+                                ->disk('public')
+                                ->directory('products/images')
                                 ->required(),
 
                             Toggle::make('is_primary')
@@ -313,8 +314,10 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('primaryImage.path')
+                ImageColumn::make('image')
                     ->label('Image')
+                    ->state(fn(Product $record) => $record->primaryImage?->path ?? $record->images->first()?->path)
+                    ->disk('public')
                     ->circular(),
 
                 TextColumn::make('name')

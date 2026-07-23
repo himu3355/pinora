@@ -283,8 +283,8 @@ class Product extends Model
      */
     public function getPrimaryImageUrlAttribute(): string
     {
-        return $this->primaryImage?->url
-            ?? asset('images/product-placeholder.png');
+        $img = $this->primaryImage ?? $this->images->first();
+        return $img?->url ?? asset('images/product-placeholder.png');
     }
 
     /**
