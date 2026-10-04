@@ -25,6 +25,16 @@ class HomeController extends Controller
             ->limit(8)
             ->get();
 
+        if ($featuredProducts->count() < 8) {
+            $extra = Product::active()
+                ->whereNotIn('id', $featuredProducts->pluck('id'))
+                ->with(['primaryImage', 'vendor', 'category'])
+                ->latest()
+                ->limit(8 - $featuredProducts->count())
+                ->get();
+            $featuredProducts = $featuredProducts->concat($extra);
+        }
+
         $newArrivals = Product::active()
             ->newArrivals()
             ->with(['primaryImage', 'vendor'])

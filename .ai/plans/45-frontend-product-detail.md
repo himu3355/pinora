@@ -63,6 +63,16 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
+        if ($relatedProducts->count() < 4) {
+            $excludeIds = $relatedProducts->pluck('id')->push($product->id)->all();
+            $additional = Product::active()
+                ->whereNotIn('id', $excludeIds)
+                ->with(['primaryImage', 'vendor'])
+                ->limit(4 - $relatedProducts->count())
+                ->get();
+            $relatedProducts = $relatedProducts->concat($additional);
+        }
+
         $canReview = false;
         if (auth()->check()) {
             $canReview = auth()->user()

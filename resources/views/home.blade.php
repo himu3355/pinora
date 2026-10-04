@@ -261,66 +261,13 @@
 
         {{-- 2 Columns on Mobile, 3 on Tablet, 4 on Desktop --}}
         <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            @if(isset($featuredProducts) && $featuredProducts->isNotEmpty())
-                @foreach($featuredProducts as $product)
-                    @include('partials.product-card', ['product' => $product])
-                @endforeach
-            @else
-                {{-- Fallback realistic nose pins from Pinora catalog images --}}
-                @php
-                    $demoPins = [
-                        ['name' => 'Floral Gold Nose Pin', 'price' => 8450, 'rating' => 4.9, 'reviews' => 124, 'img' => 'prod-1.jpg', 'badge' => 'BESTSELLER'],
-                        ['name' => 'Classic Diamond Nose Pin', 'price' => 12900, 'rating' => 4.8, 'reviews' => 98, 'img' => 'prod-2.jpg', 'badge' => 'NEW'],
-                        ['name' => 'Ruby Teardrop Nose Pin', 'price' => 10250, 'rating' => 4.7, 'reviews' => 76, 'img' => 'prod-3.jpg', 'badge' => 'BESTSELLER'],
-                        ['name' => 'Daily Wear Gold Stud', 'price' => 5800, 'rating' => 4.9, 'reviews' => 210, 'img' => 'prod-4.jpg', 'badge' => ''],
-                        ['name' => 'Petal Bloom Nose Pin', 'price' => 9750, 'rating' => 4.8, 'reviews' => 92, 'img' => 'prod-5.jpg', 'badge' => 'BESTSELLER'],
-                        ['name' => 'Emerald Halo Nose Pin', 'price' => 14200, 'rating' => 4.9, 'reviews' => 68, 'img' => 'prod-6.jpg', 'badge' => 'NEW'],
-                        ['name' => 'Minimal Gold Hoop Pin', 'price' => 6450, 'rating' => 4.6, 'reviews' => 113, 'img' => 'prod-7.jpg', 'badge' => ''],
-                        ['name' => 'Royal Cluster Nose Pin', 'price' => 17500, 'rating' => 5.0, 'reviews' => 59, 'img' => 'prod-8.jpg', 'badge' => 'BESTSELLER'],
-                    ];
-                @endphp
-                @foreach($demoPins as $pin)
-                    <div class="product-card group flex flex-col justify-between">
-                        <div class="product-card-img relative bg-[#FAF8F5]">
-                            @if(!empty($pin['badge']))
-                                <div class="absolute top-2.5 left-2.5 z-10">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-wider uppercase bg-[#083B2B] text-white shadow-xs">
-                                        {{ $pin['badge'] }}
-                                    </span>
-                                </div>
-                            @endif
-                            <button type="button" class="product-card-wishlist" aria-label="Save to Wishlist">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                                </svg>
-                            </button>
-                            <a href="{{ route('shop.index') }}" class="block w-full h-full aspect-square">
-                                <img src="{{ asset('images/pinora/' . $pin['img']) }}" alt="{{ $pin['name'] }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                            </a>
-                        </div>
-                        <div class="product-card-body flex flex-col justify-between flex-1">
-                            <div>
-                                <h3 class="product-card-name line-clamp-1 mb-1">
-                                    <a href="{{ route('shop.index') }}" class="hover:text-[#083B2B]">
-                                        {{ $pin['name'] }}
-                                    </a>
-                                </h3>
-                                <div class="flex items-center gap-1.5 mb-2">
-                                    <div class="flex text-[#C59B27] text-xs">
-                                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
-                                    </div>
-                                    <span class="text-[0.72rem] text-[#8E9E98] font-medium">({{ $pin['reviews'] }})</span>
-                                </div>
-                            </div>
-                            <div class="pt-1">
-                                <span class="product-card-price text-sm sm:text-base font-bold text-[#142E25]">
-                                    ₹{{ number_format($pin['price']) }}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
+            @forelse($featuredProducts as $product)
+                @include('partials.product-card', ['product' => $product])
+            @empty
+                <div class="col-span-full py-12 text-center text-gray-500">
+                    <p class="text-sm">No nose pins found in catalog.</p>
+                </div>
+            @endforelse
         </div>
 
     </div>

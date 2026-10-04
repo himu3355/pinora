@@ -20,6 +20,23 @@
     {{-- Main Product Layout (2 Columns on Desktop, Stacked on Mobile) --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
 
+        @php
+            $galleryImages = [];
+            if (isset($product->images) && $product->images->isNotEmpty()) {
+                foreach ($product->images as $img) {
+                    $galleryImages[] = [
+                        'url' => $img->url,
+                        'alt' => $img->alt ?? $product->name,
+                    ];
+                }
+            } else {
+                $galleryImages[] = [
+                    'url' => asset('images/pinora/pdp-main-1.jpg'),
+                    'alt' => $product->name,
+                ];
+            }
+        @endphp
+
         {{-- ======================================================== --}}
         {{-- LEFT COLUMN: PRODUCT GALLERY (Matching Image 2)          --}}
         {{-- ======================================================== --}}
@@ -28,10 +45,11 @@
             {{-- Main Image Frame with Navigation Arrows & Slide Counter --}}
             <div class="relative bg-white border border-[#EAE5DC] rounded-2xl overflow-hidden aspect-square shadow-xs group">
                 <img id="main-product-img" 
-                     src="{{ asset('images/pinora/pdp-main-1.jpg') }}" 
-                     alt="{{ $product->name }}" 
+                     src="{{ $galleryImages[0]['url'] }}" 
+                     alt="{{ $galleryImages[0]['alt'] }}" 
                      class="w-full h-full object-cover transition-transform duration-300">
 
+                @if(count($galleryImages) > 1)
                 {{-- Left Carousel Arrow --}}
                 <button type="button" 
                         onclick="prevPdpImage()" 
@@ -50,40 +68,24 @@
 
                 {{-- Slide Indicator Badge (e.g. 1/4) --}}
                 <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[0.7rem] font-semibold px-2.5 py-1 rounded-full shadow-sm" id="pdp-counter-badge">
-                    1/4
+                    1/{{ count($galleryImages) }}
                 </div>
+                @endif
             </div>
 
-            {{-- 4 Thumbnail Images Below (Matching Image 2) --}}
+            @if(count($galleryImages) > 1)
+            {{-- Thumbnail Images Below (Matching Image 2) --}}
             <div class="grid grid-cols-4 gap-2.5 sm:gap-3 mt-3.5">
+                @foreach($galleryImages as $gIdx => $gImg)
                 <button type="button" 
-                        onclick="setPdpImage(0, '{{ asset('images/pinora/pdp-main-1.jpg') }}')" 
-                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
-                        data-index="0">
-                    <img src="{{ asset('images/pinora/pdp-thumb-1.jpg') }}" alt="Plinth View" class="w-full h-full object-cover rounded-lg">
+                        onclick="setPdpImage({{ $gIdx }}, '{{ $gImg['url'] }}')" 
+                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 {{ $gIdx === 0 ? 'border-[#083B2B]' : 'border-[#EAE5DC] hover:border-[#083B2B]' }} bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
+                        data-index="{{ $gIdx }}">
+                    <img src="{{ $gImg['url'] }}" alt="{{ $gImg['alt'] }}" class="w-full h-full object-cover rounded-lg">
                 </button>
-
-                <button type="button" 
-                        onclick="setPdpImage(1, '{{ asset('images/pinora/pdp-thumb-2.jpg') }}')" 
-                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#EAE5DC] hover:border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
-                        data-index="1">
-                    <img src="{{ asset('images/pinora/pdp-thumb-2.jpg') }}" alt="Side Angle" class="w-full h-full object-cover rounded-lg">
-                </button>
-
-                <button type="button" 
-                        onclick="setPdpImage(2, '{{ asset('images/pinora/pdp-thumb-3.jpg') }}')" 
-                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#EAE5DC] hover:border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
-                        data-index="2">
-                    <img src="{{ asset('images/pinora/pdp-thumb-3.jpg') }}" alt="Top View" class="w-full h-full object-cover rounded-lg">
-                </button>
-
-                <button type="button" 
-                        onclick="setPdpImage(3, '{{ asset('images/pinora/pdp-thumb-4.jpg') }}')" 
-                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#EAE5DC] hover:border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
-                        data-index="3">
-                    <img src="{{ asset('images/pinora/pdp-thumb-4.jpg') }}" alt="Model Wearing" class="w-full h-full object-cover rounded-lg">
-                </button>
+                @endforeach
             </div>
+            @endif
 
         </div>
 
@@ -354,44 +356,17 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            @if(isset($relatedProducts) && $relatedProducts->isNotEmpty())
+        @if(isset($relatedProducts) && $relatedProducts->isNotEmpty())
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                 @foreach($relatedProducts as $relProduct)
                     @include('partials.product-card', ['product' => $relProduct])
                 @endforeach
-            @else
-                @php
-                    $relPins = [
-                        ['name' => 'Classic Diamond Nose Pin', 'price' => 12900, 'img' => 'prod-2.jpg', 'tag' => 'NEW'],
-                        ['name' => 'Ruby Teardrop Nose Pin', 'price' => 10250, 'img' => 'prod-3.jpg', 'tag' => 'BESTSELLER'],
-                        ['name' => 'Petal Bloom Nose Pin', 'price' => 9750, 'img' => 'prod-5.jpg', 'tag' => 'BESTSELLER'],
-                        ['name' => 'Minimal Gold Hoop Pin', 'price' => 6450, 'img' => 'prod-7.jpg', 'tag' => ''],
-                    ];
-                @endphp
-                @foreach($relPins as $pin)
-                    <div class="product-card group flex flex-col justify-between">
-                        <div class="product-card-img relative bg-[#FAF8F5]">
-                            @if(!empty($pin['tag']))
-                                <div class="absolute top-2.5 left-2.5 z-10">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#083B2B] text-white shadow-xs">
-                                        {{ $pin['tag'] }}
-                                    </span>
-                                </div>
-                            @endif
-                            <a href="{{ route('shop.index') }}" class="block w-full h-full aspect-square">
-                                <img src="{{ asset('images/pinora/' . $pin['img']) }}" alt="{{ $pin['name'] }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
-                            </a>
-                        </div>
-                        <div class="product-card-body flex flex-col justify-between flex-1">
-                            <h3 class="product-card-name line-clamp-1 mb-1">{{ $pin['name'] }}</h3>
-                            <div class="pt-1">
-                                <span class="product-card-price text-sm font-bold text-[#142E25]">₹{{ number_format($pin['price']) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @endif
-        </div>
+            </div>
+        @else
+            <div class="text-center py-8 text-sm text-[#8E9E98] bg-white border border-[#EAE5DC] rounded-2xl">
+                Explore our full <a href="{{ route('shop.index') }}" class="text-[#083B2B] font-semibold underline">Nose Pin Collection</a> to discover more designs.
+            </div>
+        @endif
     </div>
 
 </div>
@@ -435,18 +410,16 @@
 
 @push('scripts')
 <script>
-const pdpImages = [
-    "{{ asset('images/pinora/pdp-main-1.jpg') }}",
-    "{{ asset('images/pinora/pdp-thumb-2.jpg') }}",
-    "{{ asset('images/pinora/pdp-thumb-3.jpg') }}",
-    "{{ asset('images/pinora/pdp-thumb-4.jpg') }}"
-];
+const pdpImages = @json(array_column($galleryImages, 'url'));
 let currentPdpIdx = 0;
 
 function setPdpImage(idx, src) {
+    if (!pdpImages || pdpImages.length === 0) return;
     currentPdpIdx = idx;
-    document.getElementById('main-product-img').src = src;
-    document.getElementById('pdp-counter-badge').textContent = (currentPdpIdx + 1) + '/' + pdpImages.length;
+    const mainImg = document.getElementById('main-product-img');
+    if (mainImg) mainImg.src = src;
+    const badge = document.getElementById('pdp-counter-badge');
+    if (badge) badge.textContent = (currentPdpIdx + 1) + '/' + pdpImages.length;
     
     document.querySelectorAll('.pdp-thumb-btn').forEach(btn => {
         if (parseInt(btn.dataset.index) === idx) {
@@ -460,11 +433,13 @@ function setPdpImage(idx, src) {
 }
 
 function nextPdpImage() {
+    if (!pdpImages || pdpImages.length <= 1) return;
     currentPdpIdx = (currentPdpIdx + 1) % pdpImages.length;
     setPdpImage(currentPdpIdx, pdpImages[currentPdpIdx]);
 }
 
 function prevPdpImage() {
+    if (!pdpImages || pdpImages.length <= 1) return;
     currentPdpIdx = (currentPdpIdx - 1 + pdpImages.length) % pdpImages.length;
     setPdpImage(currentPdpIdx, pdpImages[currentPdpIdx]);
 }
