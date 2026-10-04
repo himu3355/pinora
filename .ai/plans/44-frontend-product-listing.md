@@ -180,32 +180,19 @@ class ShopController extends Controller
 
 @section('content')
 
-<div class="max-w-7xl mx-auto px-6 py-12">
+{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Image 1) --}}
+<div class="bg-white border-b border-[#EAE5DC] py-4">
+    <!-- Daily Wear, Floral, Studded, Premium circle pills -->
+</div>
 
-    {{-- Page Header --}}
-    <div class="mb-10">
-        <h1 id="shop-title" class="font-primary text-4xl font-normal mb-2 text-text-light">
-            @if(request('search'))
-                Search: "{{ request('search') }}"
-            @elseif(isset($selectedCategory) && $selectedCategory)
-                {{ $selectedCategory->name }}
-            @elseif(request('metal_type'))
-                {{ ucfirst(request('metal_type')) }} Jewellery
-            @else
-                All Jewellery
-            @endif
-        </h1>
-        <p id="shop-count" class="text-text-muted text-[0.9rem]">
-            {{ $products->total() }} {{ Str::plural('product', $products->total()) }} found
-        </p>
-    </div>
-
-    {{-- Active Filters --}}
-    <div id="active-filters-container">
-        @include('shop.partials.active-filters')
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-8 items-start">
+{{-- 2. MAIN CATALOG BODY (Breadcrumbs, Title, Filters, 2-Col Mobile Grid) --}}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
+    <!-- Breadcrumb: Home / Nose Pins -->
+    <!-- Title: Nose Pins + Subtitle: Elegant 22K gold nose pins for every occasion -->
+    <!-- Filter button [Filter 2] + Sort dropdown [Sort: Featured] -->
+    <!-- Active filters: 22K Gold x, Clear, 48 products -->
+    <!-- Product Grid: 2 columns mobile, 3 cols tablet, 4 cols desktop -->
+</div>
 
         {{-- ===== SIDEBAR FILTERS ===== --}}
         <aside class="bg-dark-card border border-border-gold rounded-lg p-6 lg:sticky lg:top-[90px]">

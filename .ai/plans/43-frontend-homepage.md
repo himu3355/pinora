@@ -95,57 +95,31 @@ class HomeController extends Controller
 ```blade
 @extends('layouts.app')
 
-@section('title', 'Pinora — Timeless Jewellery, Infinite Craftsmanship')
-@section('meta_description', 'Shop certified gold, silver & diamond jewellery from trusted artisan vendors across India.')
+@section('title', 'Pinora — Rajkot\'s Nose Pin Specialist | Elegant 22K Gold Nose Pins')
+@section('meta_description', 'Discover certified 22K gold nose pins handcrafted by master artisans in Rajkot.')
 
 @section('content')
 
-{{-- ========== HERO ========== --}}
-<section class="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-[#0d1b35] via-dark-bg to-dark-card">
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1600&q=80')] bg-center bg-cover bg-no-repeat opacity-12"></div>
-    <div class="max-w-7xl mx-auto px-6 relative z-10 text-center py-16">
-        <p class="text-[0.8rem] tracking-[0.3em] uppercase text-gold mb-6 font-secondary">Est. 2024 · India's Premium Marketplace</p>
-        <h1 class="font-primary text-[clamp(2.5rem,7vw,5rem)] font-light leading-[1.1] mb-6 text-text-light">
-            Timeless Jewellery,<br>
-            <span class="text-gold italic font-semibold">Infinite Craftsmanship</span>
-        </h1>
-        <p class="text-[1.1rem] text-text-muted max-w-[560px] mx-auto mb-10 leading-relaxed">
-            Discover certified gold, silver & diamond jewellery crafted by India's finest artisan vendors. Every piece, a legacy.
-        </p>
-        <div class="flex gap-4 justify-center flex-wrap">
-            <a href="{{ route('shop.index') }}" class="btn btn-gold text-[0.9rem] px-10 py-3.5">Explore Collection</a>
-            <a href="{{ route('vendors.index') }}" class="btn btn-outline-gold text-[0.9rem] px-10 py-3.5">Meet Our Vendors</a>
-        </div>
-
-        @if($goldRate)
-        <div class="mt-12 inline-flex items-center gap-4 py-3 px-6 border border-border-gold rounded-full bg-gold/5">
-            <span class="w-2 h-2 rounded-full bg-gold inline-block animate-pulse"></span>
-            <span class="text-[0.8rem] text-text-muted">Today's Gold 22K Rate:</span>
-            <span class="text-[0.95rem] font-semibold text-gold">₹{{ number_format($goldRate->rate_per_gram, 2) }}/gram</span>
-        </div>
-        @endif
-    </div>
+{{-- 1. CATEGORY STORY CARDS SLIDER (Image 3) --}}
+<section class="py-4 md:py-6 bg-white border-b border-[#EAE5DC]">
+    <!-- Daily Wear, Floral Designs, Studded, Premium cards -->
 </section>
 
-{{-- ========== TRUST BADGES ========== --}}
-<section class="bg-dark-card border-t border-b border-border-gold py-8">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            @foreach([
-                ['🏅', 'BIS Hallmarked', 'All gold jewellery is BIS certified'],
-                ['✅', 'Verified Vendors', 'Every seller is ID & document verified'],
-                ['🔒', 'Secure Payments', 'SSL encrypted Razorpay checkout'],
-                ['↩️', 'Easy Returns', '7-day no-questions return policy'],
-            ] as [$icon, $title, $sub])
-            <div>
-                <div class="text-3xl mb-2">{{ $icon }}</div>
-                <div class="font-primary text-base font-semibold text-text-light mb-1">{{ $title }}</div>
-                <div class="text-[0.78rem] text-text-muted">{{ $sub }}</div>
-            </div>
-            @endforeach
-        </div>
-    </div>
+{{-- 2. HERO BANNER: RAJKOT'S NOSE PIN SPECIALIST (Image 3) --}}
+<section class="relative bg-[#062E23] overflow-hidden text-white">
+    <!-- Brand Title, Specialist H1, Shop Nose Pins CTA, Model Image -->
 </section>
+
+{{-- 3. BILINGUAL VALUE PROPOSITIONS (Image 3: 6 CARDS GRID) --}}
+<section class="py-8 md:py-12 bg-[#FAF8F5]">
+    <!-- 22K Gold, BIS Hallmarked, Secure Payment, Safe Delivery, Easy Exchange*, WhatsApp Support -->
+</section>
+
+{{-- 4. FEATURED NOSE PINS SECTION (Matching Image 1 cards) --}}
+<section class="py-8 md:py-14 bg-white border-t border-b border-[#EAE5DC]">
+    <!-- 2 Cols Mobile, 4 Cols Desktop Product Grid -->
+</section>
+```
 
 {{-- ========== SHOP BY CATEGORY ========== --}}
 @if($featuredCategories->isNotEmpty())

@@ -107,37 +107,21 @@ class ProductController extends Controller
 ```blade
 @extends('layouts.app')
 
-@section('title', $product->name . ' — Pinora')
+@section('title', $product->name . ' — 22K Gold Nose Pin | Pinora')
 @section('meta_description', $product->short_description ?? 'Shop ' . $product->name . ' at Pinora.')
+@section('navbar_tagline', 'PURE GOLD. YOU.')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 pt-10 pb-20">
 
-    {{-- Breadcrumb --}}
-    <nav class="text-[0.8rem] text-text-muted mb-8 flex gap-2 items-center flex-wrap">
-        <a href="{{ url('/') }}" class="text-text-muted hover:text-gold">Home</a> /
-        @if($product->category)
-        <a href="{{ route('shop.index', ['category' => $product->category->slug]) }}" class="text-text-muted hover:text-gold">{{ $product->category->name }}</a> /
-        @endif
-        <span class="text-gold">{{ $product->name }}</span>
-    </nav>
-
-    {{-- Main Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-
-        {{-- ===== GALLERY ===== --}}
-        <div>
-            <div id="main-image" class="aspect-square bg-dark-card border border-border-gold rounded-lg overflow-hidden mb-4">
-                <img id="main-img-el" src="{{ $product->primary_image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-            </div>
-            @if($product->images->count() > 1)
-            <div class="flex gap-3 overflow-x-auto">
-                @foreach($product->images as $img)
-                <button onclick="document.getElementById('main-img-el').src='{{ $img->url }}'" class="flex-shrink-0 w-18 h-18 rounded-md overflow-hidden border-2 {{ $img->is_primary ? 'border-gold' : 'border-border-gold' }} bg-transparent cursor-pointer p-0 transition-all duration-300 hover:border-gold">
-                    <img src="{{ $img->url }}" alt="{{ $img->alt_text }}" class="w-full h-full object-cover">
-                </button>
-                @endforeach
-            </div>
+{{-- 1. Breadcrumbs: Home / Nose Pins / Product Name --}}
+{{-- 2. Left Column: Gallery with arrows, 1/4 counter, and 4 thumbnails below --}}
+{{-- 3. Right Column: Bestseller badge, Title, 4.8 Rating (126 reviews), Price (Inclusive of taxes), BIS Hallmarked Gold badge --}}
+{{-- 4. Pincode Delivery Estimator Box with Check Button --}}
+{{-- 5. Gold Purity Selector (22K Gold / 18K Gold) & Size Selector (Small / Medium / Large) --}}
+{{-- 6. Accordions: Product Details, Price Breakup, Shipping & Returns --}}
+{{-- 7. Desktop CTA Buy Box + Mobile Sticky Bottom Action Bar with Add to Cart and Buy Now buttons --}}
+{{-- 8. You May Also Like Related Products Grid --}}
+```
             @endif
         </div>
 
@@ -187,7 +171,18 @@ class ProductController extends Controller
                     @endif
                     @if(isset($pricing['making_charges']))
                     <tr class="border-b border-border-gold">
-                        <td class="py-2.5 text-text-muted">Making Charges</td>
+                        <td class="py-2.5 text-text-muted">
+                            Making Charges
+                            @if(isset($pricing['making_charges_type']))
+                                <span class="text-xs opacity-75">
+                                    @if($pricing['making_charges_type'] === 'percentage' && isset($pricing['making_charges_rate']))
+                                        ({{ $pricing['making_charges_rate'] }}%)
+                                    @elseif($pricing['making_charges_type'] === 'per_gram' && isset($pricing['making_charges_rate']))
+                                        (₹{{ number_format($pricing['making_charges_rate'], 2) }}/g)
+                                    @endif
+                                </span>
+                            @endif
+                        </td>
                         <td class="py-2.5 text-right text-text-light">₹{{ number_format($pricing['making_charges'],2) }}</td>
                     </tr>
                     @endif

@@ -171,21 +171,42 @@ class ProductResource extends Resource
                             ->minValue(0),
                     ]),
 
-                    Grid::make(2)->schema([
-                        TextInput::make('making_charges')
-                            ->label('Making Charges')
+                    Grid::make(3)->schema([
+                        TextInput::make('loss')
+                            ->label('Loss')
                             ->numeric()
-                            ->prefix('₹')
-                            ->minValue(0),
+                            ->step('0.001')
+                            ->suffix('g')
+                            ->minValue(0)
+                            ->placeholder('0.000')
+                            ->helperText('Weight loss during making'),
 
                         Select::make('making_charges_type')
                             ->label('Making Charges Type')
                             ->options([
-                                'flat'       => 'Flat (₹ per piece)',
+                                'fixed'      => 'Fixed Amount (₹)',
                                 'per_gram'   => 'Per Gram (₹/g)',
                                 'percentage' => 'Percentage (%)',
                             ])
-                            ->default('flat'),
+                            ->default('fixed')
+                            ->required()
+                            ->live(onBlur: true),
+
+                        TextInput::make('making_charges')
+                            ->label(fn (Get $get) => match ($get('making_charges_type')) {
+                                'per_gram'   => 'Making Charges (₹/g)',
+                                'percentage' => 'Making Charges (%)',
+                                default      => 'Making Charges (₹)',
+                            })
+                            ->numeric()
+                            ->prefix(fn (Get $get) => $get('making_charges_type') === 'percentage' ? null : '₹')
+                            ->suffix(fn (Get $get) => match ($get('making_charges_type')) {
+                                'per_gram'   => '/g',
+                                'percentage' => '%',
+                                default      => null,
+                            })
+                            ->minValue(0)
+                            ->live(onBlur: true),
                     ]),
                 ]),
 

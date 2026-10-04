@@ -106,11 +106,32 @@ class ProductResource extends Resource
                         ->minValue(0)
                         ->step(0.01),
 
+                    Forms\Components\Select::make('making_charges_type')
+                        ->label('Making Charges Type')
+                        ->options([
+                            'fixed'      => 'Fixed Amount (₹)',
+                            'per_gram'   => 'Per Gram (₹/g)',
+                            'percentage' => 'Percentage (%)',
+                        ])
+                        ->default('fixed')
+                        ->required()
+                        ->live(onBlur: true),
+
                     Forms\Components\TextInput::make('making_charges')
-                        ->label('Making Charges (₹)')
+                        ->label(fn (Get $get) => match ($get('making_charges_type')) {
+                            'per_gram'   => 'Making Charges (₹/g)',
+                            'percentage' => 'Making Charges (%)',
+                            default      => 'Making Charges (₹)',
+                        })
                         ->numeric()
                         ->minValue(0)
-                        ->prefix('₹'),
+                        ->prefix(fn (Get $get) => $get('making_charges_type') === 'percentage' ? null : '₹')
+                        ->suffix(fn (Get $get) => match ($get('making_charges_type')) {
+                            'per_gram'   => '/g',
+                            'percentage' => '%',
+                            default      => null,
+                        })
+                        ->live(onBlur: true),
 
                     Forms\Components\TextInput::make('base_price')
                         ->label('Fixed Base Price (₹) — overrides metal rate calculation')

@@ -1,246 +1,371 @@
 @extends('layouts.app')
 
-@section('title', 'Pinora — Timeless Jewellery, Infinite Craftsmanship')
-@section('meta_description', 'Shop certified gold, silver & diamond jewellery from trusted artisan vendors across
-    India.')
+@section('title', 'Pinora — Rajkot\'s Nose Pin Specialist | Elegant 22K Gold Nose Pins')
+@section('meta_description', 'Discover certified 22K gold nose pins handcrafted by master artisans in Rajkot. Daily wear, floral designs, studded solitaires, and heritage bridal pins.')
 
 @section('content')
 
-    {{-- ========== HERO ========== --}}
-    <section
-        class="relative min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-[#0d1b35] via-dark-bg to-dark-card">
-        <div
-            class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=1600&q=80')] bg-center bg-cover bg-no-repeat opacity-12">
-        </div>
-        <div class="max-w-7xl mx-auto px-6 relative z-10 text-center py-16">
-            <p class="text-[0.8rem] tracking-[0.3em] uppercase text-gold mb-6 font-secondary">Est. 2024 · India's Premium
-                Marketplace</p>
-            <h1 class="font-primary text-[clamp(2.5rem,7vw,5rem)] font-light leading-[1.1] mb-6 text-text-light">
-                Timeless Jewellery,<br>
-                <span class="text-gold italic font-semibold">Infinite Craftsmanship</span>
-            </h1>
-            <p class="text-[1.1rem] text-text-muted max-w-[560px] mx-auto mb-10 leading-relaxed">
-                Discover certified gold, silver & diamond jewellery crafted by India's finest artisan vendors. Every piece,
-                a legacy.
-            </p>
-            <div class="flex gap-4 justify-center flex-wrap">
-                <a href="{{ route('shop.index') }}" class="btn btn-gold text-[0.9rem] px-10 py-3.5">Explore Collection</a>
-                <a href="{{ route('vendors.index') }}" class="btn btn-outline-gold text-[0.9rem] px-10 py-3.5">Meet Our
-                    Vendors</a>
-            </div>
-
-            @if ($goldRate)
-                <div
-                    class="mt-12 inline-flex items-center gap-4 py-3 px-6 border border-border-gold rounded-full bg-gold/5">
-                    <span class="w-2 h-2 rounded-full bg-gold inline-block animate-pulse"></span>
-                    <span class="text-[0.8rem] text-text-muted">Today's Gold 22K Rate:</span>
-                    <span
-                        class="text-[0.95rem] font-semibold text-gold">₹{{ number_format($goldRate->rate_per_gram, 2) }}/gram</span>
+{{-- ======================================================== --}}
+{{-- 1. CATEGORY STORY CARDS SLIDER (Matching Image 3)        --}}
+{{-- ======================================================== --}}
+<section class="py-4 md:py-6 bg-white border-b border-[#EAE5DC]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
+            
+            {{-- Category 1: Daily Wear --}}
+            <a href="{{ route('shop.index', ['category' => 'daily-wear']) }}" 
+               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
+                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
+                    <img src="{{ asset('images/pinora/cat-daily-wear.jpg') }}" alt="Daily Wear Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
                 </div>
-            @endif
-        </div>
-    </section>
-
-    {{-- ========== TRUST BADGES ========== --}}
-    <section class="bg-dark-card border-t border-b border-border-gold py-8">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-                @foreach ([['🏅', 'BIS Hallmarked', 'All gold jewellery is BIS certified'], ['✅', 'Verified Vendors', 'Every seller is ID & document verified'], ['🔒', 'Secure Payments', 'SSL encrypted Razorpay checkout'], ['↩️', 'Easy Returns', '7-day no-questions return policy']] as [$icon, $title, $sub])
-                    <div>
-                        <div class="text-3xl mb-2">{{ $icon }}</div>
-                        <div class="font-primary text-base font-semibold text-text-light mb-1">{{ $title }}</div>
-                        <div class="text-[0.78rem] text-text-muted">{{ $sub }}</div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- ========== SHOP BY CATEGORY ========== --}}
-    @if ($featuredCategories->isNotEmpty())
-        <section class="section-padding">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="text-center mb-12">
-                    <p class="text-xs tracking-widest uppercase text-gold mb-3">Explore</p>
-                    <h2 class="font-primary text-4xl font-normal text-text-light">Shop by Category</h2>
+                <div class="flex items-center gap-1.5 pr-1">
+                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Daily Wear</span>
+                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-6 justify-center">
-                    @foreach ($featuredCategories as $cat)
-                        <a href="{{ route('shop.index', ['category' => $cat->slug]) }}"
-                            class="block text-center p-6 bg-dark-card border border-border-gold rounded-xl transition-all duration-300 hover:border-gold hover:shadow-[0_8px_24px_rgba(201,168,76,0.15)] group">
-                            @if ($cat->image)
-                                <img src="{{ $cat->image_url }}" alt="{{ $cat->name }}"
-                                    class="w-[64px] h-[64px] object-cover rounded-full mx-auto mb-3 border-2 border-border-gold group-hover:scale-105 transition-transform duration-300">
-                            @else
-                                <div
-                                    class="w-[64px] h-[64px] rounded-full bg-gold/10 border-2 border-border-gold mx-auto mb-3 flex items-center justify-center text-gold group-hover:scale-105 group-hover:bg-gold/20 transition-all duration-300">
-                                    @switch($cat->icon)
-                                        @case('heroicon-o-star')
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385c.116.488-.415.874-.836.612l-4.717-2.94a.563.563 0 0 0-.586 0l-4.717 2.94c-.42.262-.952-.124-.836-.612l1.285-5.385a.563.563 0 0 0-.182-.557l-4.204-3.602c-.38-.325-.178-.948.32-.988l5.518-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" />
-                                            </svg>
-                                        @break
-
-                                        @case('heroicon-o-sparkles')
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
-                                            </svg>
-                                        @break
-
-                                        @case('heroicon-o-moon')
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-                                            </svg>
-                                        @break
-
-                                        @case('heroicon-o-cube')
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                                            </svg>
-                                        @break
-
-                                        @case('heroicon-o-shopping-bag')
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                                            </svg>
-                                        @break
-
-                                        @default
-                                            @if (Str::startsWith($cat->icon, 'heroicon-'))
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="w-7 h-7">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" />
-                                                </svg>
-                                            @else
-                                                <span class="text-2xl">{{ $cat->icon ?? '💎' }}</span>
-                                            @endif
-                                    @endswitch
-                                </div>
-                            @endif
-                            <div
-                                class="font-primary text-base font-semibold text-text-light group-hover:text-gold transition-colors duration-300">
-                                {{ $cat->name }}</div>
-                        </a>
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- ========== FEATURED PRODUCTS ========== --}}
-    @if ($featuredProducts->isNotEmpty())
-        <section class="section-padding bg-dark-surface/15">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="flex justify-between items-end mb-12 flex-wrap gap-4">
-                    <div>
-                        <p class="text-xs tracking-widest uppercase text-gold mb-3">Handpicked</p>
-                        <h2 class="font-primary text-4xl font-normal text-text-light">Featured Pieces</h2>
-                    </div>
-                    <a href="{{ route('shop.index', ['featured' => 1]) }}" class="btn btn-outline-gold">View All</a>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    @foreach ($featuredProducts as $product)
-                        @include('partials.product-card', ['product' => $product])
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- ========== NEW ARRIVALS ========== --}}
-    @if ($newArrivals->isNotEmpty())
-        <section class="section-padding">
-            <div class="max-w-7xl mx-auto px-6">
-                <div class="flex justify-between items-end mb-12 flex-wrap gap-4">
-                    <div>
-                        <p class="text-xs tracking-widest uppercase text-gold mb-3">Just In</p>
-                        <h2 class="font-primary text-4xl font-normal text-text-light">New Arrivals</h2>
-                    </div>
-                    <a href="{{ route('shop.index', ['new_arrivals' => 1]) }}" class="btn btn-outline-gold">View All</a>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    @foreach ($newArrivals as $product)
-                        @include('partials.product-card', ['product' => $product])
-                    @endforeach
-                </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- ========== SHOP BY METAL ========== --}}
-    <section class="section-padding bg-dark-surface/15">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-12">
-                <h2 class="font-primary text-4xl font-normal text-text-light">Shop by Metal</h2>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach ([['gold', 'Gold', '#C9A84C', '22K / 18K certified pieces'], ['silver', 'Silver', '#C0C0C0', '925 sterling & fine silver'], ['platinum', 'Platinum', '#E5E4E2', 'Rare & luxurious pieces'], ['diamond', 'Diamond', '#b9f2ff', 'GIA certified stones']] as [$slug, $label, $color, $sub])
-                    <a href="{{ route('shop.index', ['metal_type' => $slug]) }}"
-                        style="--hover-color: {{ $color }};"
-                        class="block py-10 px-6 bg-dark-card border border-border-gold rounded-lg text-center transition-all duration-300 hover:border-[var(--hover-color)]">
-                        <div style="background:{{ $color }};"
-                            class="w-14 h-14 rounded-full opacity-85 mx-auto mb-4"></div>
-                        <div style="color: {{ $color }};" class="font-primary text-2xl font-semibold mb-1">
-                            {{ $label }}</div>
-                        <div class="text-[0.78rem] text-text-muted">{{ $sub }}</div>
-                    </a>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- ========== FEATURED VENDORS ========== --}}
-    {{-- @if ($featuredVendors->isNotEmpty())
-<section class="section-padding">
-    <div class="max-w-7xl mx-auto px-6">
-        <div class="text-center mb-12">
-            <p class="text-xs tracking-widest uppercase text-gold mb-3">Trusted Sellers</p>
-            <h2 class="font-primary text-4xl font-normal text-text-light">Featured Vendors</h2>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-            @foreach ($featuredVendors as $vendor)
-            <a href="{{ route('vendors.show', $vendor->store_slug) }}" class="block text-center py-8 px-4 bg-dark-card border border-border-gold rounded-lg transition-all duration-300 hover:border-gold">
-                <img src="{{ $vendor->logo_url ?? 'https://images.unsplash.com/photo-1541336032412-2048a678540d?w=200' }}" alt="{{ $vendor->store_name }}" class="w-18 h-18 rounded-full object-cover mx-auto mb-4 border-2 border-border-gold">
-                <div class="font-primary text-lg font-semibold mb-1">{{ $vendor->store_name }}</div>
-                <div class="text-[0.78rem] text-text-muted">{{ $vendor->products_count }} Products</div>
             </a>
-            @endforeach
+
+            {{-- Category 2: Floral Designs --}}
+            <a href="{{ route('shop.index', ['category' => 'floral']) }}" 
+               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
+                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
+                    <img src="{{ asset('images/pinora/cat-floral.jpg') }}" alt="Floral Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+                </div>
+                <div class="flex items-center gap-1.5 pr-1">
+                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Floral Designs</span>
+                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
+                </div>
+            </a>
+
+            {{-- Category 3: Studded --}}
+            <a href="{{ route('shop.index', ['category' => 'studded']) }}" 
+               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
+                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
+                    <img src="{{ asset('images/pinora/cat-studded.jpg') }}" alt="Studded Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+                </div>
+                <div class="flex items-center gap-1.5 pr-1">
+                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Studded</span>
+                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
+                </div>
+            </a>
+
+            {{-- Category 4: Premium Heritage --}}
+            <a href="{{ route('shop.index', ['category' => 'premium']) }}" 
+               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
+                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
+                    <img src="{{ asset('images/pinora/cat-premium.jpg') }}" alt="Premium Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+                </div>
+                <div class="flex items-center gap-1.5 pr-1">
+                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Premium</span>
+                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
+                </div>
+            </a>
+
+            {{-- Explore All Pill --}}
+            <a href="{{ route('shop.index') }}" 
+               class="flex-shrink-0 flex items-center gap-2 bg-[#083B2B] text-white hover:bg-[#062E23] rounded-xl px-4 py-3 text-xs sm:text-sm font-semibold transition-all">
+                <span>View All (48+)</span>
+                <span>&rarr;</span>
+            </a>
+
         </div>
     </div>
 </section>
-@endif --}}
+
+{{-- ======================================================== --}}
+{{-- 2. HERO BANNER: RAJKOT'S NOSE PIN SPECIALIST (Image 3)   --}}
+{{-- ======================================================== --}}
+<section class="relative bg-[#062E23] overflow-hidden text-white">
+    {{-- Ambient bokeh background glow --}}
+    <div class="absolute inset-0 pointer-events-none opacity-25">
+        <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#C59B27] blur-3xl"></div>
+        <div class="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-[#0D4E3A] blur-2xl"></div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 items-center min-h-[460px] md:min-h-[520px] py-8 lg:py-0 gap-6">
+
+            {{-- Left Content Area --}}
+            <div class="lg:col-span-6 z-10 text-center lg:text-left pt-4 lg:pt-0">
+                
+                {{-- Brand Header Subtitle --}}
+                <div class="inline-block mb-3">
+                    <span class="font-primary text-2xl md:text-3xl font-bold tracking-[0.2em] text-[#FAF8F5] uppercase block">
+                        Pinora
+                    </span>
+                    <span class="text-[0.68rem] md:text-xs tracking-[0.3em] uppercase text-[#E0C475] font-semibold block -mt-1">
+                        — TINY JEWEL. BIG STYLE —
+                    </span>
+                </div>
+
+                {{-- Specialist Title --}}
+                <div class="my-4">
+                    <span class="block text-xs md:text-sm uppercase tracking-[0.25em] text-[#C59B27] font-bold mb-1">
+                        RAJKOT'S
+                    </span>
+                    <h1 class="font-primary text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-medium leading-[1.15] text-[#FAF8F5]">
+                        NOSE PIN <span class="italic text-[#E0C475] font-semibold">SPECIALIST</span>
+                    </h1>
+                </div>
+
+                {{-- Tagline --}}
+                <p class="text-sm md:text-base text-[#D8D1C5] max-w-md mx-auto lg:mx-0 mb-6 leading-relaxed">
+                    Elegant 22K Gold Nose Pins for Every Occasion.
+                </p>
+
+                {{-- CTA Button --}}
+                <div class="flex justify-center lg:justify-start items-center gap-4">
+                    <a href="{{ route('shop.index') }}" 
+                       class="inline-flex items-center gap-2.5 px-6 py-3 rounded-lg border border-[#C59B27] bg-[#083B2B] hover:bg-[#0A4A36] text-[#E0C475] hover:text-white font-medium text-xs md:text-sm tracking-wider uppercase transition-all duration-300 shadow-md group">
+                        <span>SHOP NOSE PINS</span>
+                        <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </a>
+                </div>
+
+                {{-- Carousel Indicator Dots (Image 3) --}}
+                <div class="flex items-center justify-center lg:justify-start gap-1.5 mt-8">
+                    <span class="w-6 h-1.5 rounded-full bg-[#C59B27]"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    <span class="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                </div>
+
+            </div>
+
+            {{-- Right Model Image (Responsive on Mobile and Desktop) --}}
+            <div class="lg:col-span-6 relative flex justify-center lg:justify-end items-end h-full">
+                <div class="relative w-full max-w-[380px] sm:max-w-[420px] lg:max-w-[460px] aspect-[4/5] overflow-hidden rounded-2xl border border-[#0A4A36]/60 shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+                    <img src="{{ asset('images/pinora/hero-banner.jpg') }}" 
+                         alt="Indian model wearing Pinora 22K Gold Nose Pin" 
+                         class="w-full h-full object-cover object-center">
+                    
+                    {{-- Soft gradient overlay --}}
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#062E23]/80 via-transparent to-transparent pointer-events-none"></div>
+
+                    {{-- Floating Hallmark Badge Overlay --}}
+                    <div class="absolute bottom-3 left-3 bg-[#062E23]/90 backdrop-blur-md border border-[#C59B27]/40 px-3 py-1.5 rounded-lg flex items-center gap-2 text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#C59B27]" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L1 21h22L12 2zm0 4.5l7 12.5H5l7-12.5z"/>
+                        </svg>
+                        <span class="text-[0.7rem] font-semibold tracking-wide">22K BIS Hallmarked</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{{-- ======================================================== --}}
+{{-- 3. BILINGUAL VALUE PROPOSITIONS (Image 3: 6 CARDS GRID)   --}}
+{{-- ======================================================== --}}
+<section class="py-8 md:py-12 bg-[#FAF8F5]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            
+            {{-- Card 1: 22K Gold --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-4 sm:p-5 text-center flex flex-col items-center justify-center hover:border-[#083B2B] hover:shadow-xs transition-all">
+                <div class="w-10 h-10 mb-2.5 rounded-full bg-[#083B2B]/5 flex items-center justify-center text-[#083B2B]">
+                    {{-- Gold bar icon --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-xs sm:text-sm text-[#142E25] mb-0.5">22K Gold</h3>
+                <p class="text-[0.72rem] text-[#60706A]">શુદ્ધ સોનાની ખાતરી</p>
+            </div>
+
+            {{-- Card 2: BIS Hallmarked --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-4 sm:p-5 text-center flex flex-col items-center justify-center hover:border-[#083B2B] hover:shadow-xs transition-all">
+                <div class="w-10 h-10 mb-2.5 rounded-full bg-[#083B2B]/5 flex items-center justify-center text-[#083B2B]">
+                    {{-- Hallmark triangle symbol --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L1 21h22L12 2zm0 4.5l7 12.5H5l7-12.5z"/>
+                    </svg>
+                </div>
+                <h3 class="font-bold text-xs sm:text-sm text-[#142E25] mb-0.5">BIS Hallmarked</h3>
+                <p class="text-[0.72rem] text-[#60706A]">હોલમાર્ક પ્રમાણિત</p>
+            </div>
+
+            {{-- Card 3: Secure Payment --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-4 sm:p-5 text-center flex flex-col items-center justify-center hover:border-[#083B2B] hover:shadow-xs transition-all">
+                <div class="w-10 h-10 mb-2.5 rounded-full bg-[#083B2B]/5 flex items-center justify-center text-[#083B2B]">
+                    {{-- Shield with check --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-xs sm:text-sm text-[#142E25] mb-0.5">Secure Payment</h3>
+                <p class="text-[0.72rem] text-[#60706A]">સુરક્ષિત પેમેન્ટ</p>
+            </div>
+
+            {{-- Card 4: Safe Delivery --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-4 sm:p-5 text-center flex flex-col items-center justify-center hover:border-[#083B2B] hover:shadow-xs transition-all">
+                <div class="w-10 h-10 mb-2.5 rounded-full bg-[#083B2B]/5 flex items-center justify-center text-[#083B2B]">
+                    {{-- Delivery truck --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25h1.5a1.125 1.125 0 011.125 1.125v4.5H14.25v-5.625zM3 14.25V6.75A2.25 2.25 0 015.25 4.5h9a2.25 2.25 0 012.25 2.25v7.5" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-xs sm:text-sm text-[#142E25] mb-0.5">Safe Delivery</h3>
+                <p class="text-[0.72rem] text-[#60706A]">સુરક્ષિત ડિલિવરી</p>
+            </div>
+
+            {{-- Card 5: Easy Exchange --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-4 sm:p-5 text-center flex flex-col items-center justify-center hover:border-[#083B2B] hover:shadow-xs transition-all">
+                <div class="w-10 h-10 mb-2.5 rounded-full bg-[#083B2B]/5 flex items-center justify-center text-[#083B2B]">
+                    {{-- Return / exchange arrows --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-xs sm:text-sm text-[#142E25] mb-0.5">Easy Exchange*</h3>
+                <p class="text-[0.72rem] text-[#60706A]">સરળ એક્સચેન્જ*</p>
+            </div>
+
+            {{-- Card 6: WhatsApp Support --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-4 sm:p-5 text-center flex flex-col items-center justify-center hover:border-[#083B2B] hover:shadow-xs transition-all">
+                <div class="w-10 h-10 mb-2.5 rounded-full bg-[#25D366]/10 flex items-center justify-center text-[#25D366]">
+                    {{-- WhatsApp chat --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                    </svg>
+                </div>
+                <h3 class="font-bold text-xs sm:text-sm text-[#142E25] mb-0.5">WhatsApp Support</h3>
+                <p class="text-[0.72rem] text-[#60706A]">ઝડપી ગ્રાહક સહાય</p>
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+{{-- ======================================================== --}}
+{{-- 4. FEATURED NOSE PINS SECTION (Matching Image 1 cards)    --}}
+{{-- ======================================================== --}}
+<section class="py-8 md:py-14 bg-white border-t border-b border-[#EAE5DC]">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        
+        {{-- Section Header --}}
+        <div class="flex items-end justify-between mb-8 pb-4 border-b border-[#EAE5DC]">
+            <div>
+                <span class="text-xs uppercase tracking-widest text-[#C59B27] font-bold block mb-1">Handcrafted in 22K Gold</span>
+                <h2 class="font-primary text-2xl sm:text-3xl md:text-4xl text-[#142E25] font-semibold">Featured Nose Pins</h2>
+            </div>
+            <a href="{{ route('shop.index') }}" class="text-xs sm:text-sm font-semibold text-[#083B2B] hover:text-[#C59B27] flex items-center gap-1">
+                <span>View All 48 Designs</span>
+                <span>&rarr;</span>
+            </a>
+        </div>
+
+        {{-- 2 Columns on Mobile, 3 on Tablet, 4 on Desktop --}}
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            @if(isset($featuredProducts) && $featuredProducts->isNotEmpty())
+                @foreach($featuredProducts as $product)
+                    @include('partials.product-card', ['product' => $product])
+                @endforeach
+            @else
+                {{-- Fallback realistic nose pins from Pinora catalog images --}}
+                @php
+                    $demoPins = [
+                        ['name' => 'Floral Gold Nose Pin', 'price' => 8450, 'rating' => 4.9, 'reviews' => 124, 'img' => 'prod-1.jpg', 'badge' => 'BESTSELLER'],
+                        ['name' => 'Classic Diamond Nose Pin', 'price' => 12900, 'rating' => 4.8, 'reviews' => 98, 'img' => 'prod-2.jpg', 'badge' => 'NEW'],
+                        ['name' => 'Ruby Teardrop Nose Pin', 'price' => 10250, 'rating' => 4.7, 'reviews' => 76, 'img' => 'prod-3.jpg', 'badge' => 'BESTSELLER'],
+                        ['name' => 'Daily Wear Gold Stud', 'price' => 5800, 'rating' => 4.9, 'reviews' => 210, 'img' => 'prod-4.jpg', 'badge' => ''],
+                        ['name' => 'Petal Bloom Nose Pin', 'price' => 9750, 'rating' => 4.8, 'reviews' => 92, 'img' => 'prod-5.jpg', 'badge' => 'BESTSELLER'],
+                        ['name' => 'Emerald Halo Nose Pin', 'price' => 14200, 'rating' => 4.9, 'reviews' => 68, 'img' => 'prod-6.jpg', 'badge' => 'NEW'],
+                        ['name' => 'Minimal Gold Hoop Pin', 'price' => 6450, 'rating' => 4.6, 'reviews' => 113, 'img' => 'prod-7.jpg', 'badge' => ''],
+                        ['name' => 'Royal Cluster Nose Pin', 'price' => 17500, 'rating' => 5.0, 'reviews' => 59, 'img' => 'prod-8.jpg', 'badge' => 'BESTSELLER'],
+                    ];
+                @endphp
+                @foreach($demoPins as $pin)
+                    <div class="product-card group flex flex-col justify-between">
+                        <div class="product-card-img relative bg-[#FAF8F5]">
+                            @if(!empty($pin['badge']))
+                                <div class="absolute top-2.5 left-2.5 z-10">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold tracking-wider uppercase bg-[#083B2B] text-white shadow-xs">
+                                        {{ $pin['badge'] }}
+                                    </span>
+                                </div>
+                            @endif
+                            <button type="button" class="product-card-wishlist" aria-label="Save to Wishlist">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                            </button>
+                            <a href="{{ route('shop.index') }}" class="block w-full h-full aspect-square">
+                                <img src="{{ asset('images/pinora/' . $pin['img']) }}" alt="{{ $pin['name'] }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                            </a>
+                        </div>
+                        <div class="product-card-body flex flex-col justify-between flex-1">
+                            <div>
+                                <h3 class="product-card-name line-clamp-1 mb-1">
+                                    <a href="{{ route('shop.index') }}" class="hover:text-[#083B2B]">
+                                        {{ $pin['name'] }}
+                                    </a>
+                                </h3>
+                                <div class="flex items-center gap-1.5 mb-2">
+                                    <div class="flex text-[#C59B27] text-xs">
+                                        <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                                    </div>
+                                    <span class="text-[0.72rem] text-[#8E9E98] font-medium">({{ $pin['reviews'] }})</span>
+                                </div>
+                            </div>
+                            <div class="pt-1">
+                                <span class="product-card-price text-sm sm:text-base font-bold text-[#142E25]">
+                                    ₹{{ number_format($pin['price']) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+
+    </div>
+</section>
+
+{{-- ======================================================== --}}
+{{-- 5. RAJKOT ARTISAN CRAFT STORY BANNER                     --}}
+{{-- ======================================================== --}}
+<section class="py-12 md:py-16 bg-[#083B2B] text-white relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+                <span class="text-xs uppercase tracking-widest text-[#E0C475] font-bold block mb-2">The Legacy of Rajkot Goldsmiths</span>
+                <h2 class="font-primary text-3xl sm:text-4xl font-normal leading-tight text-[#FAF8F5] mb-4">
+                    Precision Crafting for <span class="text-[#E0C475] italic">Tiny Masterpieces</span>
+                </h2>
+                <p class="text-sm text-[#D8D1C5] leading-relaxed mb-6">
+                    A nose pin isn't just an accessory — it's an emblem of grace and personal identity. At Pinora, every single piece is handcrafted by master artisans in Rajkot with pure 22K gold, pristine gemstones, and tamper-proof BIS hallmarking.
+                </p>
+                <div class="flex flex-wrap gap-4 items-center">
+                    <a href="{{ route('shop.index') }}" class="btn btn-gold text-xs sm:text-sm px-6 py-3 font-semibold uppercase">Explore Catalog</a>
+                    <a href="https://wa.me/919999999999?text=Hi%20Pinora" target="_blank" class="btn btn-outline-gold text-xs sm:text-sm px-6 py-3">Talk to Artisan</a>
+                </div>
+            </div>
+            <div class="flex justify-center md:justify-end">
+                <div class="bg-white/5 border border-white/15 p-6 rounded-2xl max-w-md w-full backdrop-blur-xs">
+                    <h3 class="font-primary text-xl text-[#E0C475] font-semibold mb-3">Why Trust Pinora?</h3>
+                    <ul class="space-y-3 text-xs sm:text-sm text-[#FAF8F5]/90">
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-[#C59B27] text-base">✓</span>
+                            <span><strong>100% 22K BIS Hallmarked:</strong> Every pin carries authentic laser-etched HUID certification.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-[#C59B27] text-base">✓</span>
+                            <span><strong>Comfort Screw & Wire Fitting:</strong> Tailored specifically for comfortable all-day wear.</span>
+                        </li>
+                        <li class="flex items-start gap-2.5">
+                            <span class="text-[#C59B27] text-base">✓</span>
+                            <span><strong>Transparent Pricing:</strong> Clear breakdown of gold rate, weight, making charges & GST.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
 @endsection
-
-@push('styles')
-    <style>
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.4;
-            }
-        }
-
-        @media (max-width: 768px) {
-            [style*="grid-template-columns:repeat(4"] {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-        }
-    </style>
-@endpush

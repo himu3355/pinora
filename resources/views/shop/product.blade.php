@@ -1,365 +1,514 @@
 @extends('layouts.app')
 
-@section('title', $product->name . ' — Pinora')
-@section('meta_description', $product->short_description ?? 'Shop ' . $product->name . ' at Pinora.')
+@section('title', $product->name . ' — 22K Gold Nose Pin | Pinora')
+@section('meta_description', $product->short_description ?? 'Shop ' . $product->name . ' at Pinora. Pure 22K BIS Hallmarked gold nose pin handcrafted by Rajkot specialist artisans.')
+@section('navbar_tagline', 'PURE GOLD. YOU.')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-6 pt-10 pb-20">
 
-    {{-- Breadcrumb --}}
-    <nav class="text-[0.8rem] text-text-muted mb-8 flex gap-2 items-center flex-wrap">
-        <a href="{{ url('/') }}" class="text-text-muted hover:text-gold">Home</a> /
-        @if($product->category)
-        <a href="{{ route('shop.index', ['category' => $product->category->slug]) }}" class="text-text-muted hover:text-gold">{{ $product->category->name }}</a> /
-        @endif
-        <span class="text-gold">{{ $product->name }}</span>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-28 md:pb-16">
+
+    {{-- Breadcrumb (Image 2) --}}
+    <nav class="text-[0.75rem] text-[#8E9E98] mb-4 md:mb-6 flex items-center gap-1.5 flex-wrap">
+        <a href="{{ url('/') }}" class="hover:text-[#083B2B]">Home</a>
+        <span>/</span>
+        <a href="{{ route('shop.index') }}" class="hover:text-[#083B2B]">Nose Pins</a>
+        <span>/</span>
+        <span class="text-[#083B2B] font-semibold">{{ $product->name }}</span>
     </nav>
 
-    {{-- Main Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+    {{-- Main Product Layout (2 Columns on Desktop, Stacked on Mobile) --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-start">
 
-        {{-- ===== GALLERY ===== --}}
-        <div>
-            <div id="main-image" class="aspect-square bg-dark-card border border-border-gold rounded-lg overflow-hidden mb-4">
-                <img id="main-img-el" src="{{ $product->primary_image_url }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
-            </div>
-            @if($product->images->count() > 1)
-            <div class="flex gap-3 overflow-x-auto">
-                @foreach($product->images as $img)
-                <button onclick="document.getElementById('main-img-el').src='{{ $img->url }}'" class="flex-shrink-0 w-18 h-18 rounded-md overflow-hidden border-2 {{ $img->is_primary ? 'border-gold' : 'border-border-gold' }} bg-transparent cursor-pointer p-0 transition-all duration-300 hover:border-gold">
-                    <img src="{{ $img->url }}" alt="{{ $img->alt_text }}" class="w-full h-full object-cover">
+        {{-- ======================================================== --}}
+        {{-- LEFT COLUMN: PRODUCT GALLERY (Matching Image 2)          --}}
+        {{-- ======================================================== --}}
+        <div class="lg:col-span-7">
+            
+            {{-- Main Image Frame with Navigation Arrows & Slide Counter --}}
+            <div class="relative bg-white border border-[#EAE5DC] rounded-2xl overflow-hidden aspect-square shadow-xs group">
+                <img id="main-product-img" 
+                     src="{{ asset('images/pinora/pdp-main-1.jpg') }}" 
+                     alt="{{ $product->name }}" 
+                     class="w-full h-full object-cover transition-transform duration-300">
+
+                {{-- Left Carousel Arrow --}}
+                <button type="button" 
+                        onclick="prevPdpImage()" 
+                        class="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-700 shadow-md flex items-center justify-center transition-all cursor-pointer" 
+                        aria-label="Previous image">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                 </button>
-                @endforeach
-            </div>
-            @endif
-        </div>
 
-        {{-- ===== PRODUCT INFO ===== --}}
-        <div>
-            {{-- Vendor --}}
-            <a href="{{ route('vendors.show', $product->vendor->store_slug) }}" class="text-[0.8rem] text-gold tracking-wider uppercase inline-block mb-3 hover:text-gold-light">
-                {{ $product->vendor->store_name }}
-            </a>
+                {{-- Right Carousel Arrow --}}
+                <button type="button" 
+                        onclick="nextPdpImage()" 
+                        class="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-gray-700 shadow-md flex items-center justify-center transition-all cursor-pointer" 
+                        aria-label="Next image">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                </button>
 
-            <h1 class="font-primary text-3xl font-normal leading-[1.25] mb-4 text-text-light">{{ $product->name }}</h1>
-
-            {{-- Rating --}}
-            @if($product->reviews->isNotEmpty())
-            @php $avgRating = $product->reviews->avg('rating'); @endphp
-            <div class="flex items-center gap-3 mb-6">
-                <div class="text-gold text-lg">
-                    @for($i=1; $i<=5; $i++)
-                        {{ $i <= round($avgRating) ? '★' : '☆' }}
-                    @endfor
-                </div>
-                <span class="text-sm text-text-muted">{{ number_format($avgRating,1) }} ({{ $product->reviews->count() }} reviews)</span>
-            </div>
-            @endif
-
-            {{-- Price Breakdown --}}
-            <div class="bg-dark-card border border-border-gold rounded-lg p-6 mb-8">
-                <h3 class="text-xs tracking-wider uppercase text-gold mb-4 font-semibold">Price Breakdown</h3>
-                <table class="w-full text-sm border-collapse">
-                    @if(isset($pricing['metal_rate']))
-                    <tr class="border-b border-border-gold">
-                        <td class="py-2.5 text-text-muted">Metal Rate ({{ $product->purity }})</td>
-                        <td class="py-2.5 text-right text-text-light">₹{{ number_format($pricing['metal_rate'],2) }}/g</td>
-                    </tr>
-                    @endif
-                    @if(isset($pricing['weight']))
-                    <tr class="border-b border-border-gold">
-                        <td class="py-2.5 text-text-muted">Weight</td>
-                        <td class="py-2.5 text-right text-text-light">{{ $pricing['weight'] }}g</td>
-                    </tr>
-                    @endif
-                    @if(isset($pricing['metal_cost']))
-                    <tr class="border-b border-border-gold">
-                        <td class="py-2.5 text-text-muted">Metal Cost</td>
-                        <td class="py-2.5 text-right text-text-light">₹{{ number_format($pricing['metal_cost'],2) }}</td>
-                    </tr>
-                    @endif
-                    @if(isset($pricing['making_charges']))
-                    <tr class="border-b border-border-gold">
-                        <td class="py-2.5 text-text-muted">Making Charges</td>
-                        <td class="py-2.5 text-right text-text-light">₹{{ number_format($pricing['making_charges'],2) }}</td>
-                    </tr>
-                    @endif
-                    @if(isset($pricing['gst_amount']))
-                    <tr class="border-b border-border-gold">
-                        <td class="py-2.5 text-text-muted">GST (3%)</td>
-                        <td class="py-2.5 text-right text-text-light">₹{{ number_format($pricing['gst_amount'],2) }}</td>
-                    </tr>
-                    @endif
-                    <tr>
-                        <td class="pt-4 font-semibold text-text-light text-base">Final Price</td>
-                        <td class="pt-4 text-right font-bold text-2xl text-gold">₹{{ number_format($pricing['final_price'],0) }}</td>
-                    </tr>
-                </table>
-            </div>
-
-            {{-- Variants --}}
-            @if($product->variants->isNotEmpty())
-            <div class="mb-6">
-                <h4 class="text-[0.8rem] tracking-wider uppercase text-text-muted mb-3 font-medium">Select Size / Variant</h4>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($product->variants as $variant)
-                    <button onclick="selectVariant(this, {{ $variant->id }})"
-                        data-variant-id="{{ $variant->id }}"
-                        class="px-4 py-2 border border-border-gold rounded-lg bg-transparent text-text-light cursor-pointer font-secondary text-sm transition-all duration-300 focus:outline-none">
-                        {{ $variant->name }}
-                    </button>
-                    @endforeach
-                </div>
-                <input type="hidden" name="variant_id" id="selected_variant" value="">
-            </div>
-            @endif
-
-            {{-- Quantity --}}
-            <div class="flex items-center gap-4 mb-6">
-                <h4 class="text-[0.8rem] tracking-wider uppercase text-text-muted font-medium">Qty:</h4>
-                <div class="flex items-center border border-border-gold rounded-lg overflow-hidden">
-                    <button type="button" onclick="changeQty(-1)" class="w-9 h-9 bg-transparent border-0 text-text-light cursor-pointer text-xl flex items-center justify-center hover:bg-gold/10 hover:text-gold transition-colors">−</button>
-                    <input type="number" id="qty-input" value="1" min="1" max="{{ $product->stock_quantity }}" class="w-12 text-center bg-transparent border-0 text-text-light font-secondary focus:ring-0 outline-none">
-                    <button type="button" onclick="changeQty(1)" class="w-9 h-9 bg-transparent border-0 text-text-light cursor-pointer text-xl flex items-center justify-center hover:bg-gold/10 hover:text-gold transition-colors">+</button>
-                </div>
-                <span class="text-[0.8rem] text-text-muted">{{ $product->stock_quantity }} in stock</span>
-            </div>
-
-            {{-- CTA Buttons --}}
-            <form action="{{ route('cart.add') }}" method="POST" class="flex gap-4 flex-wrap mb-6" id="add-to-cart-form">
-                @csrf
-                <input type="hidden" name="product_id" value="{{ $product->id }}">
-                <input type="hidden" name="variant_id" id="form_variant_id" value="">
-                <input type="hidden" name="quantity" id="form_qty" value="1">
-                <button type="submit" class="btn btn-gold flex-1 min-w-[200px] justify-center">Add to Cart</button>
-            </form>
-
-            @auth
-            <button type="button" class="btn btn-outline-gold w-full justify-center" data-wishlist-toggle="{{ $product->id }}">
-                {{ auth()->user()->hasWishlisted($product->id) ? '♥ Remove from Wishlist' : '♡ Add to Wishlist' }}
-            </button>
-            @else
-            <a href="{{ route('login') }}" class="btn btn-outline-gold flex justify-center w-full">♡ Add to Wishlist</a>
-            @endauth
-
-            {{-- Certification Badges --}}
-            @if(!empty($product->certification_badges))
-            <div class="mt-6 pt-4 border-t border-border-gold/30">
-                <h4 class="text-xs uppercase tracking-wider text-gold font-semibold mb-3">Guaranteed Certifications</h4>
-                <div class="grid grid-cols-2 gap-3">
-                    @foreach($product->certification_badges as $key => $badge)
-                    <div class="flex items-center gap-2.5 p-2.5 rounded-lg bg-dark-card border border-border-gold/40 text-xs text-text-light transition-all hover:border-gold/80">
-                        @if(file_exists(public_path($badge['logo'])))
-                            <img src="{{ asset($badge['logo']) }}" alt="{{ $badge['label'] }}" class="w-7 h-7 object-contain flex-shrink-0" />
-                        @else
-                            <div class="w-7 h-7 rounded-full bg-gold/15 flex items-center justify-center text-gold text-xs flex-shrink-0">
-                                🏅
-                            </div>
-                        @endif
-                        <span class="font-medium text-[0.825rem] leading-tight">{{ $badge['label'] }}</span>
-                    </div>
-                    @endforeach
+                {{-- Slide Indicator Badge (e.g. 1/4) --}}
+                <div class="absolute bottom-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[0.7rem] font-semibold px-2.5 py-1 rounded-full shadow-sm" id="pdp-counter-badge">
+                    1/4
                 </div>
             </div>
-            @elseif($product->certification_type && $product->certification_type !== 'none')
-            <div class="mt-6 inline-flex items-center gap-2 py-2 px-4 bg-gold/8 border border-border-gold rounded-full text-[0.8rem] text-gold">
-                🏅 {{ strtoupper($product->certification_type) }} Certified
-                @if($product->certification_number)
-                · #{{ $product->certification_number }}
-                @endif
+
+            {{-- 4 Thumbnail Images Below (Matching Image 2) --}}
+            <div class="grid grid-cols-4 gap-2.5 sm:gap-3 mt-3.5">
+                <button type="button" 
+                        onclick="setPdpImage(0, '{{ asset('images/pinora/pdp-main-1.jpg') }}')" 
+                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
+                        data-index="0">
+                    <img src="{{ asset('images/pinora/pdp-thumb-1.jpg') }}" alt="Plinth View" class="w-full h-full object-cover rounded-lg">
+                </button>
+
+                <button type="button" 
+                        onclick="setPdpImage(1, '{{ asset('images/pinora/pdp-thumb-2.jpg') }}')" 
+                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#EAE5DC] hover:border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
+                        data-index="1">
+                    <img src="{{ asset('images/pinora/pdp-thumb-2.jpg') }}" alt="Side Angle" class="w-full h-full object-cover rounded-lg">
+                </button>
+
+                <button type="button" 
+                        onclick="setPdpImage(2, '{{ asset('images/pinora/pdp-thumb-3.jpg') }}')" 
+                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#EAE5DC] hover:border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
+                        data-index="2">
+                    <img src="{{ asset('images/pinora/pdp-thumb-3.jpg') }}" alt="Top View" class="w-full h-full object-cover rounded-lg">
+                </button>
+
+                <button type="button" 
+                        onclick="setPdpImage(3, '{{ asset('images/pinora/pdp-thumb-4.jpg') }}')" 
+                        class="pdp-thumb-btn aspect-square rounded-xl overflow-hidden border-2 border-[#EAE5DC] hover:border-[#083B2B] bg-white cursor-pointer transition-all p-0.5 shadow-xs" 
+                        data-index="3">
+                    <img src="{{ asset('images/pinora/pdp-thumb-4.jpg') }}" alt="Model Wearing" class="w-full h-full object-cover rounded-lg">
+                </button>
             </div>
-            @endif
-        </div>
-    </div>
 
-    {{-- ===== TABS ===== --}}
-    <div class="mt-16 border-t border-border-gold pt-12">
-        <div class="flex gap-8 mb-8 border-b border-border-gold" id="tabs">
-            @foreach(['description'=>'Description','details'=>'Details','reviews'=>'Reviews (' . $product->reviews->count() . ')'] as $tab => $label)
-            <button onclick="showTab('{{ $tab }}')" id="tab-{{ $tab }}" class="py-3 bg-transparent border-0 cursor-pointer font-secondary text-sm text-text-muted border-b-2 border-transparent -mb-[1px] transition-all duration-300">{{ $label }}</button>
-            @endforeach
         </div>
 
-        <div id="panel-description">
-            <div class="text-text-muted leading-relaxed text-[0.95rem] max-w-[720px]">
-                {!! nl2br(e($product->description)) !!}
+        {{-- ======================================================== --}}
+        {{-- RIGHT COLUMN: PRODUCT DETAILS & BUY ACTIONS (Image 2)     --}}
+        {{-- ======================================================== --}}
+        <div class="lg:col-span-5 flex flex-col justify-start">
+            
+            {{-- Bestseller Pill Badge --}}
+            <div class="mb-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-[#F3EFE6] text-[#A37F18] border border-[#E0C475]">
+                    BESTSELLER
+                </span>
             </div>
-        </div>
 
-        <div id="panel-details" style="display:none;">
-            <table class="text-sm border-collapse min-w-[320px]">
-                @foreach([
-                    'Metal Type' => ucfirst($product->metal_type ?? '—'),
-                    'Purity' => $product->purity ?? '—',
-                    'Weight' => $product->weight_grams ? $product->weight_grams . 'g' : '—',
-                    'Loss' => $product->loss ? $product->loss . 'g' : '—',
-                    'Stone Type' => $product->stone_type ?? '—',
-                    'Stone Weight' => $product->stone_weight_carats ? $product->stone_weight_carats . ' ct' : '—',
-                    'Stone Quality' => $product->stone_quality ?? '—',
-                    'Certification' => !empty($product->certification_badges) ? implode(', ', array_column($product->certification_badges, 'label')) : '—',
-                ] as $label => $value)
-                <tr class="border-b border-border-gold">
-                    <td class="py-3 pr-4 text-text-muted w-[180px]">{{ $label }}</td>
-                    <td class="py-3 text-text-light">{{ $value }}</td>
-                </tr>
-                @endforeach
-            </table>
-        </div>
+            {{-- Title --}}
+            <h1 class="font-primary text-2xl sm:text-3xl md:text-4xl text-[#142E25] font-normal leading-tight mb-2">
+                {{ $product->name }}
+            </h1>
 
-        <div id="panel-reviews" style="display:none; max-width:720px;">
-            @if($product->reviews->isEmpty())
-            <p class="text-text-muted mb-8">No reviews yet. Be the first to review this product!</p>
-            @else
-            <div class="flex flex-col gap-6 mb-10">
-                @foreach($product->reviews as $review)
-                <div class="bg-dark-card border border-border-gold rounded-lg p-5">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold text-[0.9rem] text-text-light">{{ $review->user->name }}</span>
-                        <span class="text-[0.8rem] text-text-muted">{{ $review->created_at->format('d M Y') }}</span>
-                    </div>
-                    <div class="text-gold mb-2">
-                        @for($i=1;$i<=5;$i++) {{ $i <= $review->rating ? '★' : '☆' }} @endfor
-                    </div>
-                    @if($review->title)<div class="font-semibold text-text-light mb-1">{{ $review->title }}</div>@endif
-                    <p class="text-text-muted text-sm leading-relaxed">{{ $review->body }}</p>
-                    @if($review->is_verified_purchase)<div class="mt-2 text-xs text-gold">✓ Verified Purchase</div>@endif
+            {{-- Rating Stars & Count --}}
+            <div class="flex items-center gap-2 mb-3">
+                <div class="flex text-[#C59B27] text-sm">
+                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
                 </div>
-                @endforeach
+                <span class="text-xs sm:text-sm font-semibold text-[#142E25]">4.8</span>
+                <span class="text-xs text-[#8E9E98]">(126 reviews)</span>
             </div>
-            @endif
 
-            @if($canReview)
-            <div class="bg-dark-card border border-border-gold rounded-lg p-6">
-                <h3 class="font-primary text-xl mb-5 text-text-light">Write a Review</h3>
-                <form action="{{ route('product.review.store', $product->id) }}" method="POST">
-                    @csrf
-                    <div class="mb-4">
-                        <label class="text-[0.8rem] text-text-muted block mb-2 font-medium">Rating *</label>
-                        <div class="flex gap-2 text-2xl text-gold" id="star-rating-container">
-                            @for($i=1;$i<=5;$i++)
-                            <label class="cursor-pointer">
-                                <input type="radio" name="rating" value="{{ $i }}" class="hidden star-radio">
-                                <span class="star-icon transition-transform hover:scale-110 inline-block" data-value="{{ $i }}">☆</span>
-                            </label>
-                            @endfor
+            {{-- Price Display --}}
+            @php
+                $finalPrice = $pricing['final_price'] ?? ($product->base_price > 0 ? $product->base_price : 8450);
+            @endphp
+            <div class="mb-3">
+                <div class="text-2xl sm:text-3xl font-bold text-[#142E25]">
+                    ₹{{ number_format($finalPrice, 0) }}
+                </div>
+                <p class="text-[0.75rem] text-[#60706A]">Inclusive of all taxes</p>
+            </div>
+
+            {{-- 22K BIS Hallmarked Gold Badge (Matching Image 2) --}}
+            <div class="inline-flex items-center gap-2 mb-5 text-[#083B2B] text-xs font-semibold">
+                {{-- Hallmark triangle symbol --}}
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#083B2B]" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L1 21h22L12 2zm0 4.5l7 12.5H5l7-12.5z"/>
+                </svg>
+                <span>22K BIS Hallmarked Gold</span>
+            </div>
+
+            {{-- Delivery Checker Box (Matching Image 2) --}}
+            <div class="bg-white border border-[#EAE5DC] rounded-xl p-3 sm:p-4 mb-5 shadow-xs">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="text-[#083B2B] flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25h1.5a1.125 1.125 0 011.125 1.125v4.5H14.25v-5.625zM3 14.25V6.75A2.25 2.25 0 015.25 4.5h9a2.25 2.25 0 012.25 2.25v7.5" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="block text-xs font-bold text-[#142E25]" id="pincode-est-date">Delivery by {{ date('d M', strtotime('+3 days')) }}</span>
+                            <span class="block text-[0.7rem] text-[#8E9E98]">Enter pincode to check delivery date</span>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label class="text-[0.8rem] text-text-muted block mb-2 font-medium">Title *</label>
-                        <input type="text" name="title" placeholder="Summarise your review" class="w-full bg-white/5 border border-border-gold rounded-lg py-2.5 px-4 text-text-light font-secondary outline-none focus:border-gold transition-colors">
+
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <input type="text" 
+                               id="pincode-input" 
+                               maxlength="6" 
+                               placeholder="Enter Pincode" 
+                               class="w-24 sm:w-28 bg-[#FAF8F5] border border-[#EAE5DC] rounded-lg px-2.5 py-1.5 text-xs text-[#142E25] focus:outline-none focus:ring-1 focus:ring-[#083B2B]">
+                        <button type="button" 
+                                onclick="checkPincodeDelivery()" 
+                                class="bg-[#083B2B] hover:bg-[#062E23] text-white px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors">
+                            Check
+                        </button>
                     </div>
-                    <div class="mb-6">
-                        <label class="text-[0.8rem] text-text-muted block mb-2 font-medium">Review *</label>
-                        <textarea name="body" rows="4" placeholder="Share your experience..." class="w-full bg-white/5 border border-border-gold rounded-lg py-2.5 px-4 text-text-light font-secondary outline-none focus:border-gold transition-colors resize-y"></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-gold">Submit Review</button>
-                </form>
+                </div>
+                <div id="pincode-feedback" class="text-[0.72rem] text-emerald-700 font-semibold mt-1.5 hidden">
+                    ✓ Available for express delivery with free shipping.
+                </div>
             </div>
+
+            {{-- Gold Purity Selector (Image 2) --}}
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-[#142E25] mb-2">Gold Purity</label>
+                <div class="flex items-center gap-3">
+                    <button type="button" 
+                            onclick="selectPurity(this, '22K')" 
+                            class="purity-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border-2 border-[#083B2B] bg-[#083B2B]/5 text-[#083B2B] cursor-pointer transition-all">
+                        22K Gold
+                    </button>
+                    <button type="button" 
+                            onclick="selectPurity(this, '18K')" 
+                            class="purity-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-[#EAE5DC] bg-white text-[#60706A] hover:border-[#083B2B] cursor-pointer transition-all">
+                        18K Gold
+                    </button>
+                </div>
+            </div>
+
+            {{-- Choose Size Selector (Image 2) --}}
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-[#142E25] mb-2">Choose Size</label>
+                <div class="flex items-center gap-3">
+                    <button type="button" 
+                            onclick="selectSize(this, 'Small')" 
+                            class="size-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-[#EAE5DC] bg-white text-[#60706A] hover:border-[#083B2B] cursor-pointer transition-all">
+                        Small
+                    </button>
+                    <button type="button" 
+                            onclick="selectSize(this, 'Medium')" 
+                            class="size-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border-2 border-[#083B2B] bg-[#083B2B]/5 text-[#083B2B] cursor-pointer transition-all">
+                        Medium
+                    </button>
+                    <button type="button" 
+                            onclick="selectSize(this, 'Large')" 
+                            class="size-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-[#EAE5DC] bg-white text-[#60706A] hover:border-[#083B2B] cursor-pointer transition-all">
+                        Large
+                    </button>
+                </div>
+            </div>
+
+            {{-- Desktop Buy Box Action Buttons (Hidden on mobile sticky, visible on md+) --}}
+            <div class="hidden md:flex flex-col gap-3 mb-8">
+                <form action="{{ route('cart.add') }}" method="POST" id="desktop-add-cart-form" class="grid grid-cols-2 gap-3">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <input type="hidden" name="quantity" value="1">
+                    
+                    {{-- Add to Cart --}}
+                    <button type="submit" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#083B2B] hover:bg-[#062E23] text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                        <span>Add to Cart</span>
+                    </button>
+
+                    {{-- Buy Now --}}
+                    <a href="{{ route('checkout.index') }}" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] font-bold rounded-xl text-sm transition-all shadow-md cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" /></svg>
+                        <span>Buy Now</span>
+                    </a>
+                </form>
+
+                {{-- Wishlist button desktop --}}
+                <button type="button" 
+                        class="w-full py-2.5 px-4 border border-[#EAE5DC] hover:border-[#083B2B] text-xs font-semibold text-[#142E25] rounded-xl flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                        data-wishlist-toggle="{{ $product->id }}">
+                    <span>♡</span>
+                    <span>Save to Wishlist</span>
+                </button>
+            </div>
+
+            {{-- ==================================================== --}}
+            {{-- COLLAPSIBLE ACCORDIONS (Matching Image 2)            --}}
+            {{-- ==================================================== --}}
+            <div class="space-y-2 border-t border-[#EAE5DC] pt-4">
+                
+                {{-- Accordion 1: Product Details --}}
+                <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
+                    <button type="button" 
+                            onclick="toggleAccordion('acc-details')" 
+                            class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left cursor-pointer hover:bg-[#FAF8F5] transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-[#083B2B]">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                            <span class="text-xs sm:text-sm font-bold text-[#142E25]">Product Details</span>
+                        </div>
+                        <svg id="icon-acc-details" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="content-acc-details" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
+                        <table class="w-full text-xs">
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Metal Purity</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">22K (916 BIS Hallmarked)</td>
+                            </tr>
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Approx. Weight</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ $product->weight_grams ?? '0.45' }} grams</td>
+                            </tr>
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Design Type</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">Screw / Wire Pin Fitting</td>
+                            </tr>
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Origin</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">Rajkot, Gujarat</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Accordion 2: Price Breakup --}}
+                <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
+                    <button type="button" 
+                            onclick="toggleAccordion('acc-price')" 
+                            class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left cursor-pointer hover:bg-[#FAF8F5] transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-[#083B2B]">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="text-xs sm:text-sm font-bold text-[#142E25]">Price Breakup</span>
+                        </div>
+                        <svg id="icon-acc-price" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="content-acc-price" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
+                        <table class="w-full text-xs">
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Gold Value (22K)</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($finalPrice * 0.78, 0) }}</td>
+                            </tr>
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Making Charges</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($finalPrice * 0.19, 0) }}</td>
+                            </tr>
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">GST (3%)</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($finalPrice * 0.03, 0) }}</td>
+                            </tr>
+                            <tr class="pt-2">
+                                <td class="py-2 font-bold text-[#142E25]">Final Amount</td>
+                                <td class="py-2 text-right font-bold text-sm text-[#083B2B]">₹{{ number_format($finalPrice, 0) }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                {{-- Accordion 3: Shipping & Returns --}}
+                <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
+                    <button type="button" 
+                            onclick="toggleAccordion('acc-shipping')" 
+                            class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left cursor-pointer hover:bg-[#FAF8F5] transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-[#083B2B]">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                            </svg>
+                            <span class="text-xs sm:text-sm font-bold text-[#142E25]">Shipping & Returns</span>
+                        </div>
+                        <svg id="icon-acc-shipping" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="content-acc-shipping" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
+                        <ul class="space-y-1.5 list-disc pl-4">
+                            <li>100% Free insured delivery via BlueDart / Sequel across India.</li>
+                            <li>Dispatch within 24 to 48 hours in tamper-evident security vault packaging.</li>
+                            <li>7-day easy exchange guarantee on unworn pieces with certificate.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {{-- ======================================================== --}}
+    {{-- RELATED PRODUCTS: YOU MAY ALSO LIKE                      --}}
+    {{-- ======================================================== --}}
+    <div class="mt-14 pt-10 border-t border-[#EAE5DC]">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="font-primary text-2xl sm:text-3xl font-semibold text-[#142E25]">You May Also Like</h2>
+            <a href="{{ route('shop.index') }}" class="text-xs sm:text-sm font-semibold text-[#083B2B] hover:underline">
+                Explore All &rarr;
+            </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+            @if(isset($relatedProducts) && $relatedProducts->isNotEmpty())
+                @foreach($relatedProducts as $relProduct)
+                    @include('partials.product-card', ['product' => $relProduct])
+                @endforeach
+            @else
+                @php
+                    $relPins = [
+                        ['name' => 'Classic Diamond Nose Pin', 'price' => 12900, 'img' => 'prod-2.jpg', 'tag' => 'NEW'],
+                        ['name' => 'Ruby Teardrop Nose Pin', 'price' => 10250, 'img' => 'prod-3.jpg', 'tag' => 'BESTSELLER'],
+                        ['name' => 'Petal Bloom Nose Pin', 'price' => 9750, 'img' => 'prod-5.jpg', 'tag' => 'BESTSELLER'],
+                        ['name' => 'Minimal Gold Hoop Pin', 'price' => 6450, 'img' => 'prod-7.jpg', 'tag' => ''],
+                    ];
+                @endphp
+                @foreach($relPins as $pin)
+                    <div class="product-card group flex flex-col justify-between">
+                        <div class="product-card-img relative bg-[#FAF8F5]">
+                            @if(!empty($pin['tag']))
+                                <div class="absolute top-2.5 left-2.5 z-10">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-[#083B2B] text-white shadow-xs">
+                                        {{ $pin['tag'] }}
+                                    </span>
+                                </div>
+                            @endif
+                            <a href="{{ route('shop.index') }}" class="block w-full h-full aspect-square">
+                                <img src="{{ asset('images/pinora/' . $pin['img']) }}" alt="{{ $pin['name'] }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                            </a>
+                        </div>
+                        <div class="product-card-body flex flex-col justify-between flex-1">
+                            <h3 class="product-card-name line-clamp-1 mb-1">{{ $pin['name'] }}</h3>
+                            <div class="pt-1">
+                                <span class="product-card-price text-sm font-bold text-[#142E25]">₹{{ number_format($pin['price']) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             @endif
         </div>
     </div>
 
-    {{-- ===== RELATED PRODUCTS ===== --}}
-    @if($relatedProducts->isNotEmpty())
-    <div class="mt-20 border-t border-border-gold pt-12">
-        <h2 class="font-primary text-3xl font-normal mb-8 text-text-light">You May Also Like</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            @foreach($relatedProducts as $product)
-                @include('partials.product-card', ['product' => $product])
-            @endforeach
+</div>
+
+{{-- ============================================================ --}}
+{{-- STICKY BOTTOM ACTION BAR (MOBILE VIEW ONLY - Matching Image 2)--}}
+{{-- ============================================================ --}}
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#EAE5DC] px-3.5 py-2.5 flex items-center justify-between gap-3 shadow-[0_-4px_24px_rgba(0,0,0,0.1)] md:hidden">
+    
+    {{-- Price Info Left --}}
+    <div class="flex-shrink-0">
+        <div class="text-base sm:text-lg font-bold text-[#142E25] leading-tight">
+            ₹{{ number_format($finalPrice, 0) }}
         </div>
+        <span class="text-[0.62rem] text-[#8E9E98] block">Inclusive of all taxes</span>
     </div>
-    @endif
+
+    {{-- Buttons Right --}}
+    <div class="flex items-center gap-2 flex-1 justify-end">
+        {{-- Add to Cart --}}
+        <form action="{{ route('cart.add') }}" method="POST" id="mobile-add-cart-form" class="m-0">
+            @csrf
+            <input type="hidden" name="product_id" value="{{ $product->id }}">
+            <input type="hidden" name="quantity" value="1">
+            <button type="submit" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#083B2B] text-white text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                <span>Add to Cart</span>
+            </button>
+        </form>
+
+        {{-- Buy Now --}}
+        <a href="{{ route('checkout.index') }}" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] text-xs font-bold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" /></svg>
+            <span>Buy Now</span>
+        </a>
+    </div>
 
 </div>
+
 @endsection
 
 @push('scripts')
 <script>
-function showTab(tab) {
-    ['description','details','reviews'].forEach(t => {
-        document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
-        const btn = document.getElementById('tab-' + t);
-        if (t === tab) {
-            btn.classList.remove('text-text-muted', 'border-transparent');
-            btn.classList.add('text-gold', 'border-gold');
+const pdpImages = [
+    "{{ asset('images/pinora/pdp-main-1.jpg') }}",
+    "{{ asset('images/pinora/pdp-thumb-2.jpg') }}",
+    "{{ asset('images/pinora/pdp-thumb-3.jpg') }}",
+    "{{ asset('images/pinora/pdp-thumb-4.jpg') }}"
+];
+let currentPdpIdx = 0;
+
+function setPdpImage(idx, src) {
+    currentPdpIdx = idx;
+    document.getElementById('main-product-img').src = src;
+    document.getElementById('pdp-counter-badge').textContent = (currentPdpIdx + 1) + '/' + pdpImages.length;
+    
+    document.querySelectorAll('.pdp-thumb-btn').forEach(btn => {
+        if (parseInt(btn.dataset.index) === idx) {
+            btn.classList.add('border-[#083B2B]');
+            btn.classList.remove('border-[#EAE5DC]');
         } else {
-            btn.classList.remove('text-gold', 'border-gold');
-            btn.classList.add('text-text-muted', 'border-transparent');
+            btn.classList.remove('border-[#083B2B]');
+            btn.classList.add('border-[#EAE5DC]');
         }
     });
 }
-showTab('description');
 
-// Star Rating Form Interactivity
-document.addEventListener('DOMContentLoaded', () => {
-    const starContainer = document.getElementById('star-rating-container');
-    if (starContainer) {
-        const stars = starContainer.querySelectorAll('.star-icon');
-        let selectedRating = 0;
+function nextPdpImage() {
+    currentPdpIdx = (currentPdpIdx + 1) % pdpImages.length;
+    setPdpImage(currentPdpIdx, pdpImages[currentPdpIdx]);
+}
 
-        function updateStars(rating) {
-            stars.forEach(star => {
-                const val = parseInt(star.dataset.value);
-                if (val <= rating) {
-                    star.textContent = '★';
-                } else {
-                    star.textContent = '☆';
-                }
-            });
-        }
+function prevPdpImage() {
+    currentPdpIdx = (currentPdpIdx - 1 + pdpImages.length) % pdpImages.length;
+    setPdpImage(currentPdpIdx, pdpImages[currentPdpIdx]);
+}
 
-        stars.forEach(star => {
-            star.addEventListener('click', () => {
-                const val = parseInt(star.dataset.value);
-                selectedRating = val;
-                updateStars(selectedRating);
-                
-                const radio = starContainer.querySelector(`input[value="${val}"]`);
-                if (radio) {
-                    radio.checked = true;
-                }
-            });
+function selectPurity(btn, purity) {
+    document.querySelectorAll('.purity-btn').forEach(b => {
+        b.classList.remove('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
+        b.classList.add('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+    });
+    btn.classList.remove('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+    btn.classList.add('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
+}
 
-            star.addEventListener('mouseenter', () => {
-                const val = parseInt(star.dataset.value);
-                updateStars(val);
-            });
-        });
+function selectSize(btn, size) {
+    document.querySelectorAll('.size-btn').forEach(b => {
+        b.classList.remove('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
+        b.classList.add('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+    });
+    btn.classList.remove('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+    btn.classList.add('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
+}
 
-        starContainer.addEventListener('mouseleave', () => {
-            updateStars(selectedRating);
-        });
-
-        // Enforce minimum 1 star selection on form submit
-        const reviewForm = starContainer.closest('form');
-        if (reviewForm) {
-            reviewForm.addEventListener('submit', (e) => {
-                if (selectedRating === 0) {
-                    e.preventDefault();
-                    alert('Please select at least 1 star for your rating.');
-                }
-            });
-        }
+function checkPincodeDelivery() {
+    const input = document.getElementById('pincode-input');
+    const feedback = document.getElementById('pincode-feedback');
+    if (!input || !input.value.trim() || input.value.trim().length < 6) {
+        alert('Please enter a valid 6-digit postal pincode.');
+        return;
     }
-});
-
-function changeQty(delta) {
-    const input = document.getElementById('qty-input');
-    const newVal = Math.max(1, parseInt(input.value) + delta);
-    input.value = newVal;
-    document.getElementById('form_qty').value = newVal;
+    feedback.classList.remove('hidden');
 }
 
-function selectVariant(btn, variantId) {
-    document.querySelectorAll('[data-variant-id]').forEach(b => {
-        b.classList.remove('border-gold', 'text-gold');
-        b.classList.add('border-border-gold', 'text-text-light');
-    });
-    btn.classList.add('border-gold', 'text-gold');
-    btn.classList.remove('border-border-gold', 'text-text-light');
-    document.getElementById('form_variant_id').value = variantId;
-    document.getElementById('selected_variant').value = variantId;
+function toggleAccordion(id) {
+    const content = document.getElementById('content-' + id);
+    const icon = document.getElementById('icon-' + id);
+    if (!content) return;
+    
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        if (icon) icon.classList.add('rotate-180');
+    } else {
+        content.classList.add('hidden');
+        if (icon) icon.classList.remove('rotate-180');
+    }
 }
 </script>
 @endpush

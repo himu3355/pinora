@@ -23,15 +23,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-gold: #C9A84C;
-  --color-gold-light: #E8D5A3;
-  --color-gold-dark: #9B7B2E;
-  --color-dark-bg: #1A1A2E;
-  --color-dark-card: #16213E;
-  --color-dark-surface: #0F3460;
-  --color-text-light: #F5F0E8;
-  --color-text-muted: #B0A9A0;
-  --color-border-gold: rgba(201, 168, 76, 0.25);
+  --color-pinora-green: #083B2B;
+  --color-pinora-green-dark: #062E23;
+  --color-pinora-green-light: #0D4E3A;
+  --color-pinora-gold: #C59B27;
+  --color-pinora-gold-light: #E0C475;
+  --color-pinora-gold-dark: #A37F18;
+  --color-pinora-ivory: #FAF8F5;
+  --color-pinora-card: #FFFFFF;
+  --color-pinora-border: #EAE5DC;
+  --color-pinora-text: #142E25;
+  --color-pinora-muted: #60706A;
+
+  --color-gold: #C59B27;
+  --color-gold-light: #E0C475;
+  --color-gold-dark: #A37F18;
+  --color-dark-bg: #062E23;
+  --color-dark-card: #0A3A2F;
+  --color-dark-surface: #0E4739;
+  --color-text-light: #FAF8F5;
+  --color-text-muted: #8E9E98;
+  --color-border-gold: rgba(197, 155, 39, 0.3);
+
   --font-primary: 'Cormorant Garamond', serif;
   --font-secondary: 'Montserrat', sans-serif;
 }
@@ -44,14 +57,14 @@
   }
   body {
     font-family: var(--font-secondary);
-    background-color: var(--color-dark-bg);
-    color: var(--color-text-light);
+    background-color: var(--color-pinora-ivory);
+    color: var(--color-pinora-text);
     line-height: 1.6;
   }
   a {
     color: inherit;
     text-decoration: none;
-    transition: all 0.3s ease;
+    transition: all 0.25s ease;
   }
   img {
     max-width: 100%;

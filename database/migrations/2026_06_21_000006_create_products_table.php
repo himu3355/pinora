@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('purity', 10)->nullable();
             $table->decimal('weight_grams', 8, 3)->nullable();
             $table->decimal('making_charges', 10, 2)->default(0);
-            $table->enum('making_charges_type', ['fixed', 'per_gram'])->default('fixed');
+            $table->enum('making_charges_type', ['fixed', 'per_gram', 'percentage'])->default('fixed');
             $table->string('stone_type')->nullable();
             $table->decimal('stone_weight_carats', 8, 3)->nullable();
             $table->string('stone_quality')->nullable();
