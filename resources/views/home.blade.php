@@ -6,65 +6,50 @@
 @section('content')
 
 {{-- ======================================================== --}}
-{{-- 1. CATEGORY STORY CARDS SLIDER (Matching Image 3)        --}}
+{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Matching Shop Page)    --}}
 {{-- ======================================================== --}}
-<section class="py-4 md:py-6 bg-white border-b border-[#EAE5DC]">
+<section class="py-4 bg-white border-b border-[#EAE5DC]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none scroll-smooth">
+        <div class="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 overflow-x-auto pb-1 scrollbar-none">
             
-            {{-- Category 1: Daily Wear --}}
-            <a href="{{ route('shop.index', ['category' => 'daily-wear']) }}" 
-               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
-                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
-                    <img src="{{ asset('images/pinora/cat-daily-wear.jpg') }}" alt="Daily Wear Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+            {{-- Circle 1: Daily Wear --}}
+            <a href="{{ route('shop.index', ['category' => 'daily-wear']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 border-[#EAE5DC] group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
+                    <img src="{{ asset('images/pinora/cat-daily-wear.jpg') }}" alt="Daily Wear Nose Pins" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
                 </div>
-                <div class="flex items-center gap-1.5 pr-1">
-                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Daily Wear</span>
-                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
-                </div>
+                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Daily Wear</span>
             </a>
 
-            {{-- Category 2: Floral Designs --}}
-            <a href="{{ route('shop.index', ['category' => 'floral']) }}" 
-               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
-                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
-                    <img src="{{ asset('images/pinora/cat-floral.jpg') }}" alt="Floral Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+            {{-- Circle 2: Floral --}}
+            <a href="{{ route('shop.index', ['category' => 'floral']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 border-[#EAE5DC] group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
+                    <img src="{{ asset('images/pinora/cat-floral.jpg') }}" alt="Floral Nose Pins" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
                 </div>
-                <div class="flex items-center gap-1.5 pr-1">
-                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Floral Designs</span>
-                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
-                </div>
+                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Floral</span>
             </a>
 
-            {{-- Category 3: Studded --}}
-            <a href="{{ route('shop.index', ['category' => 'studded']) }}" 
-               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
-                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
-                    <img src="{{ asset('images/pinora/cat-studded.jpg') }}" alt="Studded Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+            {{-- Circle 3: Studded --}}
+            <a href="{{ route('shop.index', ['category' => 'studded']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 border-[#EAE5DC] group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
+                    <img src="{{ asset('images/pinora/cat-studded.jpg') }}" alt="Studded Nose Pins" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
                 </div>
-                <div class="flex items-center gap-1.5 pr-1">
-                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Studded</span>
-                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
-                </div>
+                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Studded</span>
             </a>
 
-            {{-- Category 4: Premium Heritage --}}
-            <a href="{{ route('shop.index', ['category' => 'premium']) }}" 
-               class="flex-shrink-0 flex items-center gap-3 bg-[#FAF8F5] hover:bg-[#F3EFE6] border border-[#EAE5DC] hover:border-[#C59B27] rounded-xl px-3.5 py-2.5 transition-all duration-200 group">
-                <div class="w-11 h-11 rounded-lg bg-white overflow-hidden border border-[#EAE5DC] flex-shrink-0 p-1 flex items-center justify-center">
-                    <img src="{{ asset('images/pinora/cat-premium.jpg') }}" alt="Premium Nose Pins" class="w-full h-full object-cover rounded-md group-hover:scale-110 transition-transform">
+            {{-- Circle 4: Premium --}}
+            <a href="{{ route('shop.index', ['category' => 'premium']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 border-[#EAE5DC] group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
+                    <img src="{{ asset('images/pinora/cat-premium.jpg') }}" alt="Premium Nose Pins" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
                 </div>
-                <div class="flex items-center gap-1.5 pr-1">
-                    <span class="text-xs sm:text-sm font-semibold text-[#142E25] whitespace-nowrap">Premium</span>
-                    <span class="text-xs text-[#083B2B] group-hover:translate-x-1 transition-transform">&rarr;</span>
-                </div>
+                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Premium</span>
             </a>
 
-            {{-- Explore All Pill --}}
-            <a href="{{ route('shop.index') }}" 
-               class="flex-shrink-0 flex items-center gap-2 bg-[#083B2B] text-white hover:bg-[#062E23] rounded-xl px-4 py-3 text-xs sm:text-sm font-semibold transition-all">
-                <span>View All (48+)</span>
-                <span>&rarr;</span>
+            {{-- Circle 5: View All --}}
+            <a href="{{ route('shop.index') }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#083B2B]/5 border-2 border-[#EAE5DC] group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs text-[#083B2B]">
+                    <span class="text-xs font-bold">ALL</span>
+                </div>
+                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">View All</span>
             </a>
 
         </div>

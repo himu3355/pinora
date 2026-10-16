@@ -52,6 +52,24 @@ class ProductsTable
                     ->label('Category')
                     ->sortable(),
 
+                TextColumn::make('product_type')
+                    ->label('Type')
+                    ->badge()
+                    ->color(fn(?string $state): string => match ($state) {
+                        'jewellery'  => 'success',
+                        'coin_bar'   => 'warning',
+                        'mrp_fixed'  => 'info',
+                        'mrp_linked' => 'primary',
+                        default      => 'gray',
+                    })
+                    ->formatStateUsing(fn(?string $state): string => match ($state) {
+                        'jewellery'  => 'Jewellery',
+                        'coin_bar'   => 'Coin/Bar',
+                        'mrp_fixed'  => 'MRP Fixed',
+                        'mrp_linked' => 'MRP Linked',
+                        default      => ucfirst($state ?? 'Jewellery'),
+                    }),
+
                 TextColumn::make('metal_type')
                     ->label('Metal')
                     ->badge()
@@ -106,6 +124,15 @@ class ProductsTable
                         'draft'     => 'Draft',
                         'active'    => 'Active',
                         'inactive'  => 'Inactive',
+                    ]),
+
+                SelectFilter::make('product_type')
+                    ->label('Product Type')
+                    ->options([
+                        'jewellery'  => 'Jewellery',
+                        'coin_bar'   => 'Coin / Bar',
+                        'mrp_fixed'  => 'MRP Fixed',
+                        'mrp_linked' => 'MRP Linked',
                     ]),
 
                 SelectFilter::make('created_by')

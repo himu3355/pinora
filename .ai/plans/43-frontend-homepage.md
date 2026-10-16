@@ -100,9 +100,9 @@ class HomeController extends Controller
 
 @section('content')
 
-{{-- 1. CATEGORY STORY CARDS SLIDER (Image 3) --}}
-<section class="py-4 md:py-6 bg-white border-b border-[#EAE5DC]">
-    <!-- Daily Wear, Floral Designs, Studded, Premium cards -->
+{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Matching Shop Page) --}}
+<section class="py-4 bg-white border-b border-[#EAE5DC]">
+    <!-- Daily Wear, Floral, Studded, Premium, View All circular avatars matching shop page -->
 </section>
 
 {{-- 2. HERO BANNER: RAJKOT'S NOSE PIN SPECIALIST (Image 3) --}}

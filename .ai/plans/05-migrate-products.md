@@ -35,6 +35,7 @@ Create two tables:
 | `sku` | string | yes | unique, nullable |
 | `metal_type` | enum('gold','silver','platinum','other') | no | |
 | `purity` | string(10) | yes | '22K', '925', etc. |
+| `product_type` | enum('jewellery','coin_bar','mrp_fixed','mrp_linked') | no | Default: 'jewellery' |
 | `weight_grams` | decimal(8,3) | yes | Net weight in grams |
 | `loss` | decimal(8,3) | yes | Weight loss during making (grams) |
 | `making_charges` | decimal(10,2) | no | Default: 0 |
@@ -52,6 +53,7 @@ Create two tables:
 | `is_new_arrival` | boolean | no | Default: true |
 | `is_price_on_request` | boolean | no | Default: false (for very high-value items) |
 | `base_price` | decimal(12,2) | yes | Override: if set, ignore metal rate formula |
+| `mrp_pieces` | unsignedInteger | no | Default: 1 (For mrp_linked: divide total cost by this many pieces to get per-piece MRP) |
 | `discount_percent` | decimal(5,2) | no | Default: 0.00 |
 | `stock_quantity` | unsignedInteger | no | Default: 1 |
 | `min_order_quantity` | unsignedInteger | no | Default: 1 |

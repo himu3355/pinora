@@ -16,6 +16,8 @@ class CategorySeeder extends Seeder
             ['name' => 'Silver Jewellery',  'icon' => 'heroicon-o-moon'],
             ['name' => 'Platinum',          'icon' => 'heroicon-o-cube'],
             ['name' => 'Fashion / Imitation','icon' => 'heroicon-o-shopping-bag'],
+            ['name' => 'Coins & Bars',      'icon' => 'heroicon-o-circle-stack'],
+            ['name' => 'Accessories & Care','icon' => 'heroicon-o-sparkles'],
         ];
 
         $subCategories = [
@@ -24,6 +26,8 @@ class CategorySeeder extends Seeder
             'Silver Jewellery'  => ['Rings', 'Earrings', 'Anklets', 'Bracelets'],
             'Platinum'          => ['Rings', 'Pendants', 'Earrings'],
             'Fashion / Imitation' => ['Necklace Sets', 'Earrings', 'Bangles', 'Maang Tikka'],
+            'Coins & Bars'      => ['Gold Coins & Bars', 'Silver Coins & Bars'],
+            'Accessories & Care'=> ['Jewellery Care & Cleaning'],
         ];
 
         foreach ($topLevel as $i => $cat) {

@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             ShieldSeeder::class,
             RolesAndPermissionsSeeder::class,
             DummyDataSeeder::class,
+            SampleCalculationProductsSeeder::class,
         ]);
 
         // Assign super_admin role to test@example.com user if they exist or create one

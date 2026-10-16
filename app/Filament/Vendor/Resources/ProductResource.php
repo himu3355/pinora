@@ -119,6 +119,19 @@ class ProductResource extends Resource
             Section::make('Metal, Stone & Pricing Calculations')
                 ->schema([
                     Grid::make(3)->schema([
+                        Select::make('product_type')
+                            ->label('Product / Pricing Type')
+                            ->options([
+                                'jewellery'  => '💍 Jewellery',
+                                'coin_bar'   => '🪙 Coin / Bar',
+                                'mrp_fixed'  => '🏷️ MRP Fixed',
+                                'mrp_linked' => '🔗 MRP Linked (Rate-Based)',
+                            ])
+                            ->default('jewellery')
+                            ->required()
+                            ->live(onBlur: true)
+                            ->helperText('Controls which pricing formula is used.'),
+
                         Select::make('metal_type')
                             ->options([
                                 'gold'     => 'Gold',
@@ -132,48 +145,53 @@ class ProductResource extends Resource
 
                         Select::make('purity')
                             ->options(fn (Get $get) => match ($get('metal_type')) {
-                                'gold'     => ['24K' => '24K', '22K' => '22K', '18K' => '18K', '14K' => '14K'],
-                                'silver'   => ['999' => '999', '925' => '925'],
+                                'gold'     => ['24K' => '24K (999)', '22K' => '22K (916)', '18K' => '18K (750)', '14K' => '14K (585)'],
+                                'silver'   => ['999' => '999 (Fine)', '925' => '925 (Sterling)'],
                                 'platinum' => ['950' => '950'],
                                 default    => [],
                             })
                             ->live(onBlur: true)
                             ->disabled(fn (Get $get) => blank($get('metal_type'))),
-
-                        TextInput::make('weight_grams')
-                            ->label('Weight (grams)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->step(0.001)
-                            ->live(onBlur: true),
                     ]),
 
                     Grid::make(3)->schema([
-                        TextInput::make('loss')
-                            ->label('Loss')
+                        TextInput::make('weight_grams')
+                            ->label('Gross Weight (g)')
                             ->numeric()
                             ->minValue(0)
                             ->step(0.001)
                             ->suffix('g')
+                            ->live(onBlur: true),
+
+                        TextInput::make('loss')
+                            ->label('Less Weight / Loss (g)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->step(0.001)
+                            ->suffix('g')
+                            ->default(0)
                             ->placeholder('0.000')
-                            ->helperText('Weight loss during making'),
+                            ->helperText('Deducted from gross to get net weight')
+                            ->live(onBlur: true),
 
                         Select::make('making_charges_type')
-                            ->label('Making Charges Type')
+                            ->label('Labour / Making Type')
                             ->options([
                                 'fixed'      => 'Fixed Amount (₹)',
                                 'per_gram'   => 'Per Gram (₹/g)',
-                                'percentage' => 'Percentage (%)',
+                                'percentage' => 'Percentage (%) of Metal Value',
                             ])
-                            ->default('fixed')
+                            ->default('percentage')
                             ->required()
                             ->live(onBlur: true),
+                    ]),
 
+                    Grid::make(3)->schema([
                         TextInput::make('making_charges')
                             ->label(fn (Get $get) => match ($get('making_charges_type')) {
-                                'per_gram'   => 'Making Charges (₹/g)',
-                                'percentage' => 'Making Charges (%)',
-                                default      => 'Making Charges (₹)',
+                                'per_gram'   => 'Labour (₹/g)',
+                                'percentage' => 'Labour (%)',
+                                default      => 'Labour (₹ fixed)',
                             })
                             ->numeric()
                             ->minValue(0)
@@ -184,41 +202,38 @@ class ProductResource extends Resource
                                 default      => null,
                             })
                             ->live(onBlur: true),
-                    ]),
 
-                    Grid::make(3)->schema([
-                        Select::make('stone_type')
-                            ->options([
-                                'diamond'  => 'Diamond',
-                                'ruby'     => 'Ruby',
-                                'emerald'  => 'Emerald',
-                                'sapphire' => 'Sapphire',
-                                'pearl'    => 'Pearl',
-                                'none'     => 'None / Plain',
-                            ]),
-
-                        TextInput::make('stone_weight_carats')
-                            ->label('Stone Weight (carats)')
-                            ->numeric()
-                            ->minValue(0)
-                            ->step(0.001),
-                    ]),
-
-                    Grid::make(2)->schema([
                         TextInput::make('base_price')
-                            ->label('Fixed Base Price (₹) — overrides metal rate calculation')
+                            ->label(fn (Get $get) => $get('product_type') === 'mrp_fixed'
+                                ? 'Fixed MRP (₹)'
+                                : 'Base Price Override (₹)')
                             ->numeric()
                             ->minValue(0)
                             ->prefix('₹')
-                            ->helperText('Leave empty to auto-calculate from live metal rate')
+                            ->helperText(fn (Get $get) => $get('product_type') === 'mrp_fixed'
+                                ? 'This IS the final consumer MRP (GST-inclusive).'
+                                : 'Leave empty to auto-calculate from live metal rate')
                             ->live(onBlur: true),
 
+                        TextInput::make('mrp_pieces')
+                            ->label('No. of Pieces (Batch)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(1)
+                            ->helperText('Total batch cost ÷ pieces = per-piece MRP')
+                            ->visible(fn (Get $get) => $get('product_type') === 'mrp_linked')
+                            ->live(onBlur: true),
+                    ]),
+
+                    Grid::make(3)->schema([
                         TextInput::make('discount_percent')
                             ->label('Discount (%)')
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100)
+                            ->default(0)
                             ->suffix('%')
+                            ->visible(fn (Get $get) => in_array($get('product_type') ?? 'jewellery', ['jewellery', 'coin_bar']))
                             ->live(onBlur: true),
                     ]),
 
@@ -345,6 +360,24 @@ class ProductResource extends Resource
                     ->label('Category')
                     ->sortable(),
 
+                TextColumn::make('product_type')
+                    ->label('Type')
+                    ->badge()
+                    ->color(fn(?string $state): string => match ($state) {
+                        'jewellery'  => 'success',
+                        'coin_bar'   => 'warning',
+                        'mrp_fixed'  => 'info',
+                        'mrp_linked' => 'primary',
+                        default      => 'gray',
+                    })
+                    ->formatStateUsing(fn(?string $state): string => match ($state) {
+                        'jewellery'  => 'Jewellery',
+                        'coin_bar'   => 'Coin/Bar',
+                        'mrp_fixed'  => 'MRP Fixed',
+                        'mrp_linked' => 'MRP Linked',
+                        default      => ucfirst($state ?? 'Jewellery'),
+                    }),
+
                 TextColumn::make('metal_type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -358,6 +391,12 @@ class ProductResource extends Resource
                 TextColumn::make('weight_grams')
                     ->label('Weight (g)')
                     ->sortable(),
+
+                TextColumn::make('calculated_price')
+                    ->label('Price (₹)')
+                    ->state(fn(Product $record) => $record->calculated_price ?? $record->base_price)
+                    ->money('INR')
+                    ->sortable(false),
 
                 TextColumn::make('stock_quantity')
                     ->label('Stock')
@@ -393,6 +432,15 @@ class ProductResource extends Resource
                         'draft'    => 'Draft',
                         'active'   => 'Active',
                         'inactive' => 'Inactive',
+                    ]),
+
+                SelectFilter::make('product_type')
+                    ->label('Product Type')
+                    ->options([
+                        'jewellery'  => 'Jewellery',
+                        'coin_bar'   => 'Coin / Bar',
+                        'mrp_fixed'  => 'MRP Fixed',
+                        'mrp_linked' => 'MRP Linked',
                     ]),
 
                 SelectFilter::make('metal_type')

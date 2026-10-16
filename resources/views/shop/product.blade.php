@@ -259,20 +259,40 @@
                     <div id="content-acc-details" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
                         <table class="w-full text-xs">
                             <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">Metal Purity</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">22K (916 BIS Hallmarked)</td>
+                                <td class="py-1.5 font-medium text-gray-500">Metal & Purity</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ ucfirst($product->metal_type) }} {{ $product->purity }}</td>
                             </tr>
                             <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">Approx. Weight</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ $product->weight_grams ?? '0.45' }} grams</td>
+                                <td class="py-1.5 font-medium text-gray-500">Gross Weight</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ number_format((float) ($product->weight_grams ?? 0), 3) }} g</td>
+                            </tr>
+                            @if ((float) ($product->loss ?? 0) > 0)
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-red-500">Less Weight (Loss)</td>
+                                <td class="py-1.5 text-right font-semibold text-red-500">− {{ number_format((float) $product->loss, 3) }} g</td>
                             </tr>
                             <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">Design Type</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">Screw / Wire Pin Fitting</td>
+                                <td class="py-1.5 font-medium text-emerald-700">Net Weight</td>
+                                <td class="py-1.5 text-right font-semibold text-emerald-700">{{ number_format(max(0, (float)$product->weight_grams - (float)$product->loss), 3) }} g</td>
+                            </tr>
+                            @endif
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Pricing Type</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">
+                                    @php
+                                        $typeMap = [
+                                            'jewellery'  => 'Jewellery (Weight × Rate + Labour + GST)',
+                                            'coin_bar'   => 'Coin & Bar (Floor Rounding)',
+                                            'mrp_fixed'  => 'Direct MRP (Fixed Price)',
+                                            'mrp_linked' => 'Rate Linked MRP (Batch Cost ÷ Pieces)',
+                                        ];
+                                    @endphp
+                                    {{ $typeMap[$product->product_type] ?? 'Standard Jewellery' }}
+                                </td>
                             </tr>
                             <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">Origin</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">Rajkot, Gujarat</td>
+                                <td class="py-1.5 font-medium text-gray-500">Origin / Artisan</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ $product->vendor->store_name ?? 'Pinora Certified' }}</td>
                             </tr>
                         </table>
                     </div>
@@ -295,21 +315,72 @@
                     </button>
                     <div id="content-acc-price" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
                         <table class="w-full text-xs">
-                            <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">Gold Value (22K)</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($finalPrice * 0.78, 0) }}</td>
-                            </tr>
-                            <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">Making Charges</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($finalPrice * 0.19, 0) }}</td>
-                            </tr>
-                            <tr class="border-b border-[#FAF8F5]">
-                                <td class="py-1.5 font-medium text-gray-500">GST (3%)</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($finalPrice * 0.03, 0) }}</td>
-                            </tr>
+                            @if (($pricing['product_type'] ?? $product->product_type) === 'mrp_fixed')
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">Fixed MRP</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
+                                </tr>
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">Taxes</td>
+                                    <td class="py-1.5 text-right font-semibold text-emerald-700">Included in MRP</td>
+                                </tr>
+                            @elseif (($pricing['product_type'] ?? $product->product_type) === 'mrp_linked')
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">
+                                        Batch Metal Value ({{ number_format($pricing['net_weight'] ?? $product->weight_grams, 3) }}g)
+                                    </td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
+                                </tr>
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">Batch Labour ({{ $pricing['making_charges_rate'] ?? 0 }}%)</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
+                                </tr>
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">Total Batch Cost</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['batch_cost'] ?? 0, 2) }}</td>
+                                </tr>
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">Batch Quantity</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ $pricing['mrp_pieces'] ?? $product->mrp_pieces ?? 1 }} pcs</td>
+                                </tr>
+                            @else
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">
+                                        Metal Value ({{ ucfirst($pricing['metal_type'] ?? $product->metal_type) }} {{ $pricing['purity'] ?? $product->purity }} · {{ number_format($pricing['net_weight'] ?? $product->weight_grams, 3) }}g)
+                                    </td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
+                                </tr>
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">
+                                        Labour / Making Charges
+                                        @if (($pricing['making_charges_type'] ?? '') === 'percentage')
+                                            ({{ $pricing['making_charges_rate'] }}%)
+                                        @elseif (($pricing['making_charges_type'] ?? '') === 'per_gram')
+                                            (₹{{ $pricing['making_charges_rate'] }}/g)
+                                        @endif
+                                    </td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
+                                </tr>
+                                @if (($pricing['discount_percent'] ?? 0) > 0)
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-green-600">Discount ({{ $pricing['discount_percent'] }}%)</td>
+                                    <td class="py-1.5 text-right font-semibold text-green-600">− ₹{{ number_format($pricing['discount_amount'] ?? 0, 2) }}</td>
+                                </tr>
+                                @endif
+                                <tr class="border-b border-[#FAF8F5]">
+                                    <td class="py-1.5 font-medium text-gray-500">GST ({{ $pricing['gst_rate'] ?? 3 }}% HSN 7113)</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">+ ₹{{ number_format($pricing['gst_amount'] ?? 0, 2) }}</td>
+                                </tr>
+                            @endif
                             <tr class="pt-2">
-                                <td class="py-2 font-bold text-[#142E25]">Final Amount</td>
-                                <td class="py-2 text-right font-bold text-sm text-[#083B2B]">₹{{ number_format($finalPrice, 0) }}</td>
+                                <td class="py-2 font-bold text-[#142E25]">
+                                    @if (in_array(($pricing['product_type'] ?? $product->product_type), ['mrp_fixed', 'mrp_linked']))
+                                        Final Consumer MRP
+                                    @else
+                                        Final Amount (incl. GST)
+                                    @endif
+                                </td>
+                                <td class="py-2 text-right font-bold text-sm text-[#083B2B]">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
                             </tr>
                         </table>
                     </div>
