@@ -125,9 +125,10 @@
 | 56 | `56-sub-category-menu.md` | Dedicated subcategory navigation menu |
 | 57 | `57-admin-hidden-navigation.md` | Admin navigation visibility & hidden menus |
 | 58 | `58-temporary-vendor-freeze.md` | Temporary vendor freeze & reversion instructions |
+| 59 | `59-dynamic-general-elements-cms-settings.md` | Dynamic General Elements, Site Settings, Sliders, CMS & FAQs |
 
 ---
 
-## 🔢 Total Steps: 58
+## 🔢 Total Steps: 59
 
 Start with `01-migrate-users-extend.md` and work through sequentially.

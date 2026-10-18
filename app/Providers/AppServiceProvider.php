@@ -12,6 +12,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        require_once app_path('Helpers/SettingsHelper.php');
+
         $this->app->singleton(\App\Services\CartService::class);
         $this->app->singleton(\App\Services\PricingService::class);
         $this->app->singleton(\App\Services\GstService::class);

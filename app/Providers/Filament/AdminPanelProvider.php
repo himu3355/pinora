@@ -58,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
                 \Filament\Navigation\NavigationGroup::make('Customers'),
                 \Filament\Navigation\NavigationGroup::make('Content'),
                 \Filament\Navigation\NavigationGroup::make('Finance'),
+                \Filament\Navigation\NavigationGroup::make('Settings'),
             ])
             ->middleware([
                 EncryptCookies::class,

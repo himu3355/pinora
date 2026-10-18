@@ -10,6 +10,7 @@
 @endphp
 
 {{-- Desktop Top Announcement Bar --}}
+@if(app_setting_bool('announcement_enabled', true))
 <div class="bg-[#041F17] text-[#D8D1C5] text-[0.72rem] tracking-wider py-1.5 px-4 hidden md:block border-b border-[#083B2B]">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
         <div class="flex items-center gap-4">
@@ -22,18 +23,30 @@
                 @endif
             </span>
             <span class="text-white/20">|</span>
-            <span class="text-white/80">Rajkot's Nose Pin Specialist</span>
+            <span class="text-white/80">{{ app_setting('specialist_title', "Rajkot's Nose Pin Specialist") }}</span>
         </div>
         <div class="flex items-center gap-6">
-            <span class="flex items-center gap-1.5 text-white/90">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#C59B27]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" /></svg>
-                100% Certified & BIS Hallmarked
-            </span>
-            <span class="text-white/20">|</span>
-            <span class="text-white/80">Free Insured Shipping Across India</span>
+            @if($announcement = app_setting('announcement_text'))
+                <span class="flex items-center gap-1.5 text-white/90">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#C59B27]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" /></svg>
+                    @if($announcementLink = app_setting('announcement_link'))
+                        <a href="{{ $announcementLink }}" class="hover:underline hover:text-[#C59B27]">{{ $announcement }}</a>
+                    @else
+                        {{ $announcement }}
+                    @endif
+                </span>
+            @else
+                <span class="flex items-center gap-1.5 text-white/90">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#C59B27]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" /></svg>
+                    100% Certified & BIS Hallmarked
+                </span>
+                <span class="text-white/20">|</span>
+                <span class="text-white/80">Free Insured Shipping Across India</span>
+            @endif
         </div>
     </div>
 </div>
+@endif
 
 {{-- Main Navbar --}}
 <nav class="sticky top-0 z-50 bg-[#062E23] text-white border-b border-[#0A3D2F] px-4 md:px-6 shadow-md transition-all duration-300">
@@ -49,23 +62,27 @@
         {{-- Brand Logo & Tagline (Centered on Mobile, Left-aligned on Desktop) --}}
         <div class="flex-1 md:flex-none flex flex-col items-center md:items-start text-center md:text-left">
             <a href="{{ url('/') }}" class="flex flex-col items-center md:items-start group">
-                <div class="flex items-center gap-2">
-                    {{-- Pinora Golden Floral Emblem --}}
-                    <svg class="w-7 h-7 md:w-8 md:h-8 text-[#C59B27] group-hover:rotate-45 transition-transform duration-500" viewBox="0 0 100 100" fill="currentColor">
-                        <circle cx="50" cy="50" r="10" fill="#C59B27"/>
-                        <circle cx="50" cy="20" r="12" fill="#E0C475" opacity="0.9"/>
-                        <circle cx="50" cy="80" r="12" fill="#E0C475" opacity="0.9"/>
-                        <circle cx="20" cy="50" r="12" fill="#E0C475" opacity="0.9"/>
-                        <circle cx="80" cy="50" r="12" fill="#E0C475" opacity="0.9"/>
-                        <circle cx="28.8" cy="28.8" r="9" fill="#C59B27" opacity="0.75"/>
-                        <circle cx="71.2" cy="28.8" r="9" fill="#C59B27" opacity="0.75"/>
-                        <circle cx="28.8" cy="71.2" r="9" fill="#C59B27" opacity="0.75"/>
-                        <circle cx="71.2" cy="71.2" r="9" fill="#C59B27" opacity="0.75"/>
-                    </svg>
-                    <span class="font-primary text-2xl md:text-3xl font-semibold tracking-[0.18em] text-[#FAF8F5] uppercase">Pinora</span>
-                </div>
+                @if($headerLogo = app_setting_image('header_logo'))
+                    <img src="{{ $headerLogo }}" alt="{{ app_setting('site_name', 'Pinora') }}" class="h-8 md:h-10 w-auto object-contain">
+                @else
+                    <div class="flex items-center gap-2">
+                        {{-- Pinora Golden Floral Emblem --}}
+                        <svg class="w-7 h-7 md:w-8 md:h-8 text-[#C59B27] group-hover:rotate-45 transition-transform duration-500" viewBox="0 0 100 100" fill="currentColor">
+                            <circle cx="50" cy="50" r="10" fill="#C59B27"/>
+                            <circle cx="50" cy="20" r="12" fill="#E0C475" opacity="0.9"/>
+                            <circle cx="50" cy="80" r="12" fill="#E0C475" opacity="0.9"/>
+                            <circle cx="20" cy="50" r="12" fill="#E0C475" opacity="0.9"/>
+                            <circle cx="80" cy="50" r="12" fill="#E0C475" opacity="0.9"/>
+                            <circle cx="28.8" cy="28.8" r="9" fill="#C59B27" opacity="0.75"/>
+                            <circle cx="71.2" cy="28.8" r="9" fill="#C59B27" opacity="0.75"/>
+                            <circle cx="28.8" cy="71.2" r="9" fill="#C59B27" opacity="0.75"/>
+                            <circle cx="71.2" cy="71.2" r="9" fill="#C59B27" opacity="0.75"/>
+                        </svg>
+                        <span class="font-primary text-2xl md:text-3xl font-semibold tracking-[0.18em] text-[#FAF8F5] uppercase">{{ app_setting('site_name', 'Pinora') }}</span>
+                    </div>
+                @endif
                 <span class="text-[0.55rem] md:text-[0.62rem] tracking-[0.25em] uppercase text-[#E0C475] font-medium -mt-0.5">
-                    @yield('navbar_tagline', 'TINY JEWEL. BIG STYLE.')
+                    @yield('navbar_tagline', app_setting('navbar_tagline', 'TINY JEWEL. BIG STYLE.'))
                 </span>
             </a>
         </div>

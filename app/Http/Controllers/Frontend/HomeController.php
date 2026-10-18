@@ -51,13 +51,18 @@ class HomeController extends Controller
 
         $goldRate = MetalRate::getLatestRate('gold', '22K');
 
+        $sliders = \App\Models\HomeSlider::active()->get();
+        $valueProps = \App\Models\HomeValueProp::active()->get();
+
         return view('home', compact(
             'categories',
             'featuredCategories',
             'featuredProducts',
             'newArrivals',
             'featuredVendors',
-            'goldRate'
+            'goldRate',
+            'sliders',
+            'valueProps'
         ));
     }
 }

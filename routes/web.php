@@ -90,4 +90,11 @@ Route::middleware('auth')->group(function () {
 // Stripe Webhook
 Route::post('/webhooks/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handle'])->name('stripe.webhook');
 
+// CMS Pages, Support & General Content
+Route::get('/about', [\App\Http\Controllers\Frontend\PageController::class, 'about'])->name('about');
+Route::get('/contact', [\App\Http\Controllers\Frontend\PageController::class, 'contact'])->name('contact');
+Route::post('/contact', [\App\Http\Controllers\Frontend\PageController::class, 'submitContact'])->name('contact.submit');
+Route::get('/faq', [\App\Http\Controllers\Frontend\PageController::class, 'faq'])->name('faq');
+Route::get('/page/{slug}', [\App\Http\Controllers\Frontend\PageController::class, 'show'])->name('page.show');
+
 
