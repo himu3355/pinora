@@ -100,10 +100,8 @@ class HomeController extends Controller
 
 @section('content')
 
-{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Matching Shop Page) --}}
-<section class="py-4 bg-white border-b border-[#EAE5DC]">
-    <!-- Daily Wear, Floral, Studded, Premium, View All circular avatars matching shop page -->
-</section>
+{{-- 1. MAIN CATEGORIES CIRCLE STORIES SLIDER (Dynamic from DB) --}}
+@include('partials.category-circle-slider', ['categories' => $categories ?? $featuredCategories])
 
 {{-- 2. HERO BANNER: RAJKOT'S NOSE PIN SPECIALIST (Image 3) --}}
 <section class="relative bg-[#062E23] overflow-hidden text-white">

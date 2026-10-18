@@ -137,14 +137,20 @@ class Category extends Model
     // Accessors
     // =========================================================================
 
-    /**
-     * Returns the full public URL for the category image.
-     */
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image
-            ? Storage::url($this->image)
-            : null;
+        if (!empty($this->image)) {
+            if (\Illuminate\Support\Str::startsWith($this->image, ['http://', 'https://'])) {
+                return $this->image;
+            }
+            return asset('storage/' . ltrim($this->image, '/'));
+        }
+
+        if (file_exists(public_path("images/pinora/cat-{$this->slug}.jpg"))) {
+            return asset("images/pinora/cat-{$this->slug}.jpg");
+        }
+
+        return null;
     }
 
     /**

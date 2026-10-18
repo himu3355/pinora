@@ -7,55 +7,9 @@
 @section('content')
 
 {{-- ======================================================== --}}
-{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Matching Image 1)     --}}
+{{-- 1. MAIN CATEGORIES CIRCLE STORIES SLIDER (Dynamic from DB)--}}
 {{-- ======================================================== --}}
-<div class="bg-white border-b border-[#EAE5DC] py-4">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 overflow-x-auto pb-1 scrollbar-none">
-            
-            {{-- Circle 1: Daily Wear --}}
-            <a href="{{ route('shop.index', ['category' => 'daily-wear']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 {{ request('category') === 'daily-wear' ? 'border-[#083B2B]' : 'border-[#EAE5DC]' }} group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
-                    <img src="{{ asset('images/pinora/cat-daily-wear.jpg') }}" alt="Daily Wear" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
-                </div>
-                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Daily Wear</span>
-            </a>
-
-            {{-- Circle 2: Floral --}}
-            <a href="{{ route('shop.index', ['category' => 'floral']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 {{ request('category') === 'floral' ? 'border-[#083B2B]' : 'border-[#EAE5DC]' }} group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
-                    <img src="{{ asset('images/pinora/cat-floral.jpg') }}" alt="Floral" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
-                </div>
-                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Floral</span>
-            </a>
-
-            {{-- Circle 3: Studded --}}
-            <a href="{{ route('shop.index', ['category' => 'studded']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 {{ request('category') === 'studded' ? 'border-[#083B2B]' : 'border-[#EAE5DC]' }} group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
-                    <img src="{{ asset('images/pinora/cat-studded.jpg') }}" alt="Studded" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
-                </div>
-                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Studded</span>
-            </a>
-
-            {{-- Circle 4: Premium --}}
-            <a href="{{ route('shop.index', ['category' => 'premium']) }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#FAF8F5] border-2 {{ request('category') === 'premium' ? 'border-[#083B2B]' : 'border-[#EAE5DC]' }} group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs">
-                    <img src="{{ asset('images/pinora/cat-premium.jpg') }}" alt="Premium" class="w-full h-full object-cover rounded-full group-hover:scale-110 transition-transform">
-                </div>
-                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">Premium</span>
-            </a>
-
-            {{-- Circle 5: All Pins --}}
-            <a href="{{ route('shop.index') }}" class="flex flex-col items-center gap-1.5 flex-shrink-0 group">
-                <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-1 bg-[#083B2B]/5 border-2 {{ !request('category') ? 'border-[#083B2B]' : 'border-[#EAE5DC]' }} group-hover:border-[#C59B27] transition-all flex items-center justify-center overflow-hidden shadow-xs text-[#083B2B]">
-                    <span class="text-xs font-bold">ALL</span>
-                </div>
-                <span class="text-[0.72rem] sm:text-xs font-medium text-[#142E25] group-hover:text-[#083B2B]">View All</span>
-            </a>
-
-        </div>
-    </div>
-</div>
+@include('partials.category-circle-slider', ['categories' => $categories])
 
 {{-- ======================================================== --}}
 {{-- 2. MAIN CATALOG BODY (Breadcrumbs, Title, Filters, Grid) --}}

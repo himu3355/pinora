@@ -180,10 +180,8 @@ class ShopController extends Controller
 
 @section('content')
 
-{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Image 1) --}}
-<div class="bg-white border-b border-[#EAE5DC] py-4">
-    <!-- Daily Wear, Floral, Studded, Premium circle pills -->
-</div>
+{{-- 1. MAIN CATEGORIES CIRCLE STORIES SLIDER (Dynamic from DB) --}}
+@include('partials.category-circle-slider', ['categories' => $categories])
 
 {{-- 2. MAIN CATALOG BODY (Breadcrumbs, Title, Filters, 2-Col Mobile Grid) --}}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">

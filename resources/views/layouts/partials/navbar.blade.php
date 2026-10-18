@@ -94,12 +94,15 @@
                         </div>
                         <div class="grid grid-cols-3 gap-6">
                             <div>
-                                <h4 class="font-bold text-xs uppercase tracking-wider text-[#A37F18] mb-3">By Style</h4>
+                                <h4 class="font-bold text-xs uppercase tracking-wider text-[#A37F18] mb-3">Categories</h4>
                                 <ul class="space-y-2 text-sm text-[#4A5A54]">
-                                    <li><a href="{{ route('shop.index', ['category' => 'daily-wear']) }}" class="hover:text-[#083B2B] hover:translate-x-1 inline-block transition-transform">Daily Wear Studs</a></li>
-                                    <li><a href="{{ route('shop.index', ['category' => 'floral']) }}" class="hover:text-[#083B2B] hover:translate-x-1 inline-block transition-transform">Floral Designs</a></li>
-                                    <li><a href="{{ route('shop.index', ['category' => 'studded']) }}" class="hover:text-[#083B2B] hover:translate-x-1 inline-block transition-transform">Studded & Solitaire</a></li>
-                                    <li><a href="{{ route('shop.index', ['category' => 'premium']) }}" class="hover:text-[#083B2B] hover:translate-x-1 inline-block transition-transform">Premium Heritage</a></li>
+                                    @if(isset($menuCategories) && $menuCategories->isNotEmpty())
+                                        @foreach($menuCategories->take(6) as $menuCat)
+                                            <li><a href="{{ route('shop.index', ['category' => $menuCat->slug]) }}" class="hover:text-[#083B2B] hover:translate-x-1 inline-block transition-transform">{{ $menuCat->name }}</a></li>
+                                        @endforeach
+                                    @else
+                                        <li><a href="{{ route('shop.index') }}" class="hover:text-[#083B2B] hover:translate-x-1 inline-block transition-transform">All Jewellery</a></li>
+                                    @endif
                                 </ul>
                             </div>
                             <div>
@@ -352,10 +355,13 @@
             <div>
                 <p class="text-[0.7rem] uppercase tracking-widest text-[#A37F18] font-bold mb-2">Shop By Category</p>
                 <div class="space-y-1 text-sm text-[#4A5A54]">
-                    <a href="{{ route('shop.index', ['category' => 'daily-wear']) }}" class="block py-1.5 hover:text-[#083B2B]">Daily Wear Studs</a>
-                    <a href="{{ route('shop.index', ['category' => 'floral']) }}" class="block py-1.5 hover:text-[#083B2B]">Floral Designs</a>
-                    <a href="{{ route('shop.index', ['category' => 'studded']) }}" class="block py-1.5 hover:text-[#083B2B]">Studded Solitaires</a>
-                    <a href="{{ route('shop.index', ['category' => 'premium']) }}" class="block py-1.5 hover:text-[#083B2B]">Premium Heritage</a>
+                    @if(isset($menuCategories) && $menuCategories->isNotEmpty())
+                        @foreach($menuCategories as $menuCat)
+                            <a href="{{ route('shop.index', ['category' => $menuCat->slug]) }}" class="block py-1.5 hover:text-[#083B2B]">{{ $menuCat->name }}</a>
+                        @endforeach
+                    @else
+                        <a href="{{ route('shop.index') }}" class="block py-1.5 hover:text-[#083B2B]">All Categories</a>
+                    @endif
                 </div>
             </div>
 

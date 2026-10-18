@@ -15,8 +15,9 @@ class HomeController extends Controller
         $featuredCategories = Category::active()
             ->topLevel()
             ->orderBy('sort_order')
-            ->limit(8)
+            ->orderBy('name')
             ->get();
+        $categories = $featuredCategories;
 
         $featuredProducts = Product::active()
             ->featured()
@@ -51,6 +52,7 @@ class HomeController extends Controller
         $goldRate = MetalRate::getLatestRate('gold', '22K');
 
         return view('home', compact(
+            'categories',
             'featuredCategories',
             'featuredProducts',
             'newArrivals',

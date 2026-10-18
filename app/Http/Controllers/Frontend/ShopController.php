@@ -83,7 +83,7 @@ class ShopController extends Controller
         }
 
         $products      = $query->paginate(24)->withQueryString();
-        $categories    = Category::active()->topLevel()->with('children')->get();
+        $categories    = Category::active()->topLevel()->with('children')->orderBy('sort_order')->orderBy('name')->get();
         $subCategories = Category::active()->whereNotNull('parent_id')->orderBy('sort_order')->orderBy('name')->get();
         $vendors       = Vendor::approved()->orderBy('store_name')->get(['id', 'store_name']);
 
