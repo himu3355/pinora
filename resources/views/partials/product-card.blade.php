@@ -1,12 +1,9 @@
 @php
     $pricing = app(\App\Services\PricingService::class)->calculate($product);
-    $rating = $product->reviews_avg_rating ?? ($product->average_rating > 0 ? $product->average_rating : 4.8);
-    $reviewsCount = $product->reviews_count ?? ($product->reviews ? $product->reviews->count() : 124);
-    if ($reviewsCount === 0) {
-        $reviewsCount = 80 + ($product->id * 7) % 150; // realistic social proof fallback if brand new
-    }
-    $isBestseller = $product->is_featured || ($product->id % 2 === 1);
-    $isNew = $product->is_new_arrival || (!$isBestseller && $product->id % 2 === 0);
+    $reviewsCount = $product->reviews_count ?? ($product->reviews ? $product->reviews->count() : 0);
+    $avgRating = $product->reviews_avg_rating ?? ($product->reviews && $reviewsCount > 0 ? $product->reviews->avg('rating') : 5.0);
+    $isBestseller = (bool) $product->is_featured;
+    $isNew = (bool) $product->is_new_arrival;
     
     // Choose image fallback from our high quality Pinora assets if needed
     $fallbackIndex = (($product->id - 1) % 8) + 1;
@@ -65,7 +62,9 @@
             {{-- Star Ratings & Reviews Count --}}
             <div class="flex items-center gap-1.5 mb-2">
                 <div class="flex text-[#C59B27] text-xs">
-                    <span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+                    @for($i = 1; $i <= 5; $i++)
+                        <span>{{ $i <= round($avgRating) ? '★' : '☆' }}</span>
+                    @endfor
                 </div>
                 <span class="text-[0.72rem] text-[#8E9E98] font-medium">({{ $reviewsCount }})</span>
             </div>

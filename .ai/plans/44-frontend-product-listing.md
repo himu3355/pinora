@@ -185,10 +185,10 @@ class ShopController extends Controller
 
 {{-- 2. MAIN CATALOG BODY (Breadcrumbs, Title, Filters, 2-Col Mobile Grid) --}}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
-    <!-- Breadcrumb: Home / Nose Pins -->
-    <!-- Title: Nose Pins + Subtitle: Elegant 22K gold nose pins for every occasion -->
-    <!-- Filter button [Filter 2] + Sort dropdown [Sort: Featured] -->
-    <!-- Active filters: 22K Gold x, Clear, 48 products -->
+    <!-- Breadcrumb: Home / Shop / [Category] -->
+    <!-- Title: Category / Metal / All Jewellery + Subtitle -->
+    <!-- Dynamic Filter button [Filter N] + Sort dropdown [Sort: Featured] -->
+    <!-- Dynamic Active filters strip with removable pills & Clear All link -->
     <!-- Product Grid: 2 columns mobile, 3 cols tablet, 4 cols desktop -->
 </div>
 

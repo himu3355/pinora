@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Nose Pins — Elegant 22K Gold Nose Pins | Pinora')
-@section('meta_description', 'Shop 22K gold nose pins, floral designs, diamond solitaires and daily wear studs. Certified & BIS hallmarked jewellery handcrafted in Rajkot.')
+@section('title', (isset($selectedCategory) && $selectedCategory ? $selectedCategory->name . ' — ' : '') . 'Shop Certified Jewellery | Pinora')
+@section('meta_description', 'Shop 22K gold jewellery, floral designs, diamond solitaires and daily wear studs. Certified & BIS hallmarked jewellery handcrafted in Rajkot.')
 @section('navbar_tagline', 'FINE JEWELRY FOR EVERY YOU')
 
 @section('content')
@@ -16,16 +16,23 @@
 {{-- ======================================================== --}}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
 
-    {{-- Breadcrumb Navigation (Image 1) --}}
+    {{-- Breadcrumb Navigation --}}
     <nav class="text-[0.75rem] text-[#8E9E98] mb-3 flex items-center gap-1.5 flex-wrap">
         <a href="{{ url('/') }}" class="hover:text-[#083B2B]">Home</a>
         <span>/</span>
-        @if(request('category'))
-            <a href="{{ route('shop.index') }}" class="hover:text-[#083B2B]">Nose Pins</a>
+        <a href="{{ route('shop.index') }}" class="hover:text-[#083B2B]">Shop</a>
+        @if(isset($selectedCategory) && $selectedCategory)
+            @foreach($selectedCategory->breadcrumbs() as $crumb)
+                <span>/</span>
+                @if($loop->last)
+                    <span class="text-[#083B2B] font-semibold">{{ $crumb->name }}</span>
+                @else
+                    <a href="{{ route('shop.index', ['category' => $crumb->slug]) }}" class="hover:text-[#083B2B]">{{ $crumb->name }}</a>
+                @endif
+            @endforeach
+        @elseif(request('category'))
             <span>/</span>
             <span class="text-[#083B2B] font-semibold">{{ ucfirst(str_replace('-', ' ', request('category'))) }}</span>
-        @else
-            <span class="text-[#083B2B] font-semibold">Nose Pins</span>
         @endif
     </nav>
 
@@ -37,27 +44,31 @@
             @elseif(isset($selectedCategory) && $selectedCategory)
                 {{ $selectedCategory->name }}
             @elseif(request('category'))
-                {{ ucwords(str_replace('-', ' ', request('category'))) }} Nose Pins
+                {{ ucwords(str_replace('-', ' ', request('category'))) }}
+            @elseif(request('metal_type'))
+                {{ ucfirst(request('metal_type')) }} Jewellery
+            @elseif(request('purity'))
+                {{ request('purity') }} Jewellery
             @else
-                Nose Pins
+                All Jewellery
             @endif
         </h1>
         <p class="text-xs sm:text-sm text-[#60706A] mt-1">
-            Elegant 22K gold nose pins for every occasion.
+            @if(isset($selectedCategory) && $selectedCategory->description)
+                {{ $selectedCategory->description }}
+            @else
+                Discover handcrafted certified & BIS hallmarked jewellery for every occasion.
+            @endif
         </p>
     </div>
 
-    {{-- Filter & Sort Action Bar (Matching Image 1) --}}
+    {{-- Filter & Sort Action Bar --}}
     <div class="flex items-center gap-3 mb-4">
         
-        {{-- Filter Trigger Button with Count Badge --}}
+        {{-- Filter Trigger Button with Dynamic Count Badge --}}
         @php
-            $activeFilterCount = (request('purity') ? 1 : 0) + (request('metal_type') ? 1 : 0) + (request('category') ? 1 : 0) + (request('in_stock') ? 1 : 0);
-            if ($activeFilterCount === 0 && !request()->hasAny(['category','metal_type','purity','in_stock'])) {
-                $displayBadge = 2; // Matching the sample screenshot "Filter [2]"
-            } else {
-                $displayBadge = $activeFilterCount;
-            }
+            $activeFilterKeys = array_filter(['category', 'metal_type', 'purity', 'vendor_id', 'in_stock', 'search'], fn($k) => request()->filled($k));
+            $activeFilterCount = count($activeFilterKeys);
         @endphp
 
         <button type="button" 
@@ -69,9 +80,11 @@
                 </svg>
                 <span>Filter</span>
             </div>
-            <span class="w-5 h-5 rounded-full bg-[#083B2B] text-white text-[0.68rem] font-bold flex items-center justify-center">
-                {{ $displayBadge }}
-            </span>
+            @if($activeFilterCount > 0)
+                <span class="w-5 h-5 rounded-full bg-[#083B2B] text-white text-[0.68rem] font-bold flex items-center justify-center">
+                    {{ $activeFilterCount }}
+                </span>
+            @endif
         </button>
 
         {{-- Sort Dropdown --}}
@@ -101,30 +114,77 @@
 
     </div>
 
-    {{-- Applied Tags & Products Count Strip (Image 1) --}}
+    {{-- Applied Tags & Products Count Strip --}}
     <div class="flex items-center justify-between flex-wrap gap-2 py-2 mb-6">
         <div class="flex items-center gap-2 flex-wrap">
-            {{-- Default or active 22K Gold pill --}}
-            <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/60 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
-                <span>{{ request('purity', '22K Gold') }}</span>
-                <a href="{{ request()->fullUrlWithoutQuery(['purity']) }}" class="hover:text-red-600 font-bold ml-1" aria-label="Remove filter">&times;</a>
-            </span>
+            @if($activeFilterCount > 0)
+                <span class="text-xs text-[#8E9E98] mr-1">Active:</span>
 
-            @if(request('category'))
-                <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/60 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
-                    <span>{{ ucfirst(str_replace('-', ' ', request('category'))) }}</span>
-                    <a href="{{ request()->fullUrlWithoutQuery(['category']) }}" class="hover:text-red-600 font-bold ml-1" aria-label="Remove filter">&times;</a>
-                </span>
+                {{-- Category Pill --}}
+                @if(request()->filled('category'))
+                    @php
+                        $catName = isset($selectedCategory) && $selectedCategory ? $selectedCategory->name : ucfirst(str_replace('-', ' ', request('category')));
+                    @endphp
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/70 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
+                        <span>Category: {{ $catName }}</span>
+                        <a href="{{ request()->fullUrlWithoutQuery(['category', 'page']) }}" class="hover:text-red-600 font-bold ml-0.5 text-sm" aria-label="Remove category filter">&times;</a>
+                    </span>
+                @endif
+
+                {{-- Metal Type Pill --}}
+                @if(request()->filled('metal_type'))
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/70 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
+                        <span>Metal: {{ ucfirst(request('metal_type')) }}</span>
+                        <a href="{{ request()->fullUrlWithoutQuery(['metal_type', 'page']) }}" class="hover:text-red-600 font-bold ml-0.5 text-sm" aria-label="Remove metal filter">&times;</a>
+                    </span>
+                @endif
+
+                {{-- Purity Pill (Only shown when explicitly set in request) --}}
+                @if(request()->filled('purity'))
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/70 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
+                        <span>Purity: {{ request('purity') }}</span>
+                        <a href="{{ request()->fullUrlWithoutQuery(['purity', 'page']) }}" class="hover:text-red-600 font-bold ml-0.5 text-sm" aria-label="Remove purity filter">&times;</a>
+                    </span>
+                @endif
+
+                {{-- In Stock Pill --}}
+                @if(request()->boolean('in_stock'))
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/70 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
+                        <span>In Stock Only</span>
+                        <a href="{{ request()->fullUrlWithoutQuery(['in_stock', 'page']) }}" class="hover:text-red-600 font-bold ml-0.5 text-sm" aria-label="Remove stock filter">&times;</a>
+                    </span>
+                @endif
+
+                {{-- Search Pill --}}
+                @if(request()->filled('search'))
+                    <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/70 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
+                        <span>Search: "{{ request('search') }}"</span>
+                        <a href="{{ request()->fullUrlWithoutQuery(['search', 'page']) }}" class="hover:text-red-600 font-bold ml-0.5 text-sm" aria-label="Remove search filter">&times;</a>
+                    </span>
+                @endif
+
+                {{-- Vendor Pill --}}
+                @if(request()->filled('vendor_id') && isset($vendors))
+                    @php
+                        $activeVendor = $vendors->firstWhere('id', request('vendor_id'));
+                    @endphp
+                    @if($activeVendor)
+                        <span class="inline-flex items-center gap-1.5 bg-[#EAE5DC]/70 border border-[#D8D1C5] text-[#142E25] px-3 py-1 rounded-full text-xs font-medium">
+                            <span>Vendor: {{ $activeVendor->store_name }}</span>
+                            <a href="{{ request()->fullUrlWithoutQuery(['vendor_id', 'page']) }}" class="hover:text-red-600 font-bold ml-0.5 text-sm" aria-label="Remove vendor filter">&times;</a>
+                        </span>
+                    @endif
+                @endif
+
+                <a href="{{ route('shop.index') }}" class="text-xs text-[#083B2B] hover:underline font-semibold ml-1">
+                    Clear All
+                </a>
             @endif
-
-            <a href="{{ route('shop.index') }}" class="text-xs text-[#142E25] underline hover:text-[#083B2B] font-medium ml-1">
-                Clear
-            </a>
         </div>
 
-        {{-- Products count --}}
+        {{-- Dynamic Products Count --}}
         <span class="text-xs sm:text-sm text-[#60706A] font-medium">
-            {{ $products->total() > 0 ? $products->total() : 48 }} products
+            {{ $products->total() }} {{ \Illuminate\Support\Str::plural('product', $products->total()) }}
         </span>
     </div>
 
@@ -146,7 +206,7 @@
         <div class="py-16 text-center bg-white border border-[#EAE5DC] rounded-2xl p-8">
             <div class="text-4xl mb-3">💎</div>
             <h3 class="font-primary text-xl font-bold text-[#142E25] mb-1">No products found</h3>
-            <p class="text-xs sm:text-sm text-gray-500 mb-6">We couldn't find any nose pins matching your current filter criteria.</p>
+            <p class="text-xs sm:text-sm text-gray-500 mb-6">We couldn't find any products matching your current filter criteria.</p>
             <a href="{{ route('shop.index') }}" class="btn btn-green text-xs px-6 py-2.5 rounded-xl font-semibold">
                 Clear All Filters
             </a>
@@ -156,39 +216,82 @@
 </div>
 
 {{-- ======================================================== --}}
-{{-- 4. FILTER OFF-CANVAS / MODAL DRAWER                      --}}
+{{-- 4. FILTER OFF-CANVAS / MODAL DRAWER (Dynamic from DB)    --}}
 {{-- ======================================================== --}}
 <div id="filter-modal-drawer" class="fixed inset-y-0 right-0 w-84 max-w-[85vw] bg-white z-50 transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col justify-between">
     <div class="p-6 overflow-y-auto flex-1">
         <div class="flex items-center justify-between pb-4 border-b border-[#EAE5DC] mb-6">
-            <h3 class="font-primary text-xl font-bold text-[#083B2B]">Filter Nose Pins</h3>
+            <h3 class="font-primary text-xl font-bold text-[#083B2B]">Filter Products</h3>
             <button id="filter-drawer-close-btn" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:text-black cursor-pointer">
                 &times;
             </button>
         </div>
 
         <form action="{{ route('shop.index') }}" method="GET" id="catalog-filter-form">
-            {{-- Metal Purity --}}
+            {{-- Preserve current sort and search if present --}}
+            @if(request('sort'))
+                <input type="hidden" name="sort" value="{{ request('sort') }}">
+            @endif
+            @if(request('search'))
+                <input type="hidden" name="search" value="{{ request('search') }}">
+            @endif
+
+            {{-- Categories Filter (Dynamic from DB) --}}
+            @if(isset($categories) && $categories->isNotEmpty())
             <div class="mb-6">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-[#A37F18] mb-3">Purity</h4>
-                <div class="space-y-2">
-                    @foreach(['22K' => '22K Gold (BIS 916)', '18K' => '18K Gold (BIS 750)', '14K' => '14K Gold'] as $purKey => $purLabel)
+                <h4 class="text-xs font-bold uppercase tracking-wider text-[#A37F18] mb-3">Categories</h4>
+                <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <label class="flex items-center gap-2.5 text-xs sm:text-sm text-[#142E25] cursor-pointer">
+                        <input type="radio" name="category" value="" {{ !request('category') ? 'checked' : '' }} class="accent-[#083B2B]">
+                        <span>All Categories</span>
+                    </label>
+                    @foreach($categories as $cat)
                         <label class="flex items-center gap-2.5 text-xs sm:text-sm text-[#142E25] cursor-pointer">
-                            <input type="radio" name="purity" value="{{ $purKey }}" {{ request('purity') === $purKey ? 'checked' : '' }} class="accent-[#083B2B]">
-                            <span>{{ $purLabel }}</span>
+                            <input type="radio" name="category" value="{{ $cat->slug }}" {{ request('category') === $cat->slug ? 'checked' : '' }} class="accent-[#083B2B]">
+                            <span class="font-medium">{{ $cat->name }}</span>
+                        </label>
+                        @if($cat->children && $cat->children->isNotEmpty())
+                            @foreach($cat->children as $sub)
+                                <label class="flex items-center gap-2.5 text-xs text-[#60706A] pl-5 cursor-pointer">
+                                    <input type="radio" name="category" value="{{ $sub->slug }}" {{ request('category') === $sub->slug ? 'checked' : '' }} class="accent-[#083B2B]">
+                                    <span>{{ $sub->name }}</span>
+                                </label>
+                            @endforeach
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Metal Type --}}
+            <div class="mb-6 pt-4 border-t border-[#EAE5DC]">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-[#A37F18] mb-3">Metal Type</h4>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2.5 text-xs sm:text-sm text-[#142E25] cursor-pointer">
+                        <input type="radio" name="metal_type" value="" {{ !request('metal_type') ? 'checked' : '' }} class="accent-[#083B2B]">
+                        <span>All Metals</span>
+                    </label>
+                    @foreach(['gold' => 'Gold', 'silver' => 'Silver', 'platinum' => 'Platinum'] as $metalKey => $metalLabel)
+                        <label class="flex items-center gap-2.5 text-xs sm:text-sm text-[#142E25] cursor-pointer">
+                            <input type="radio" name="metal_type" value="{{ $metalKey }}" {{ request('metal_type') === $metalKey ? 'checked' : '' }} class="accent-[#083B2B]">
+                            <span>{{ $metalLabel }}</span>
                         </label>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Categories --}}
+            {{-- Metal Purity --}}
             <div class="mb-6 pt-4 border-t border-[#EAE5DC]">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-[#A37F18] mb-3">Styles</h4>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-[#A37F18] mb-3">Purity</h4>
                 <div class="space-y-2">
-                    @foreach(['daily-wear' => 'Daily Wear', 'floral' => 'Floral Designs', 'studded' => 'Studded / Solitaire', 'premium' => 'Premium Heritage'] as $catKey => $catLabel)
+                    <label class="flex items-center gap-2.5 text-xs sm:text-sm text-[#142E25] cursor-pointer">
+                        <input type="radio" name="purity" value="" {{ !request('purity') ? 'checked' : '' }} class="accent-[#083B2B]">
+                        <span>All Purities</span>
+                    </label>
+                    @foreach(['22K' => '22K Gold (916 BIS)', '18K' => '18K Gold (750)', '14K' => '14K Gold', '925' => '925 Sterling Silver'] as $purKey => $purLabel)
                         <label class="flex items-center gap-2.5 text-xs sm:text-sm text-[#142E25] cursor-pointer">
-                            <input type="radio" name="category" value="{{ $catKey }}" {{ request('category') === $catKey ? 'checked' : '' }} class="accent-[#083B2B]">
-                            <span>{{ $catLabel }}</span>
+                            <input type="radio" name="purity" value="{{ $purKey }}" {{ request('purity') === $purKey ? 'checked' : '' }} class="accent-[#083B2B]">
+                            <span>{{ $purLabel }}</span>
                         </label>
                     @endforeach
                 </div>
@@ -203,10 +306,10 @@
             </div>
 
             <div class="pt-4 border-t border-[#EAE5DC] flex gap-3">
-                <button type="submit" class="flex-1 py-3 bg-[#083B2B] text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-[#062E23] transition-colors">
+                <button type="submit" class="flex-1 py-3 bg-[#083B2B] text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-[#062E23] transition-colors cursor-pointer">
                     Apply Filters
                 </button>
-                <a href="{{ route('shop.index') }}" class="py-3 px-4 border border-[#EAE5DC] text-gray-600 rounded-xl text-xs sm:text-sm text-center hover:bg-gray-50">
+                <a href="{{ route('shop.index') }}" class="py-3 px-4 border border-[#EAE5DC] text-gray-600 rounded-xl text-xs sm:text-sm text-center hover:bg-gray-50 flex items-center justify-center">
                     Reset
                 </a>
             </div>
