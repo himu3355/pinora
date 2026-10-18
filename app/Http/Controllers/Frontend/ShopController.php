@@ -17,11 +17,36 @@ class ShopController extends Controller
 
         // Category filter
         $selectedCategory = null;
+        $parentCategory = null;
+        $sliderCategories = null;
+        $isSubCategoryMode = false;
+
         if ($request->filled('category')) {
             $selectedCategory = Category::where('slug', $request->category)->first();
             if ($selectedCategory) {
                 $childIds = $selectedCategory->children()->pluck('id')->prepend($selectedCategory->id);
                 $query->whereIn('category_id', $childIds);
+
+                // If selected category is a main category and has subcategories:
+                if ($selectedCategory->is_top_level) {
+                    $children = $selectedCategory->children()->active()->orderBy('sort_order')->orderBy('name')->get();
+                    if ($children->isNotEmpty()) {
+                        $parentCategory = $selectedCategory;
+                        $sliderCategories = $children;
+                        $isSubCategoryMode = true;
+                    }
+                } else {
+                    // It's a subcategory: find its parent main category
+                    $parent = $selectedCategory->parent;
+                    if ($parent) {
+                        $children = $parent->children()->active()->orderBy('sort_order')->orderBy('name')->get();
+                        if ($children->isNotEmpty()) {
+                            $parentCategory = $parent;
+                            $sliderCategories = $children;
+                            $isSubCategoryMode = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -119,7 +144,16 @@ class ShopController extends Controller
             ]);
         }
 
-        return view('shop.index', compact('products', 'categories', 'subCategories', 'vendors', 'selectedCategory'));
+        return view('shop.index', compact(
+            'products',
+            'categories',
+            'subCategories',
+            'vendors',
+            'selectedCategory',
+            'parentCategory',
+            'sliderCategories',
+            'isSubCategoryMode'
+        ));
     }
 
     public function byCategory(string $slug)

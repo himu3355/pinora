@@ -50,11 +50,36 @@ class ShopController extends Controller
 
         // Category filter
         $selectedCategory = null;
+        $parentCategory = null;
+        $sliderCategories = null;
+        $isSubCategoryMode = false;
+
         if ($request->filled('category')) {
             $selectedCategory = Category::where('slug', $request->category)->first();
             if ($selectedCategory) {
                 $childIds = $selectedCategory->children()->pluck('id')->prepend($selectedCategory->id);
                 $query->whereIn('category_id', $childIds);
+
+                // If selected category is a main category and has subcategories:
+                if ($selectedCategory->is_top_level) {
+                    $children = $selectedCategory->children()->active()->orderBy('sort_order')->orderBy('name')->get();
+                    if ($children->isNotEmpty()) {
+                        $parentCategory = $selectedCategory;
+                        $sliderCategories = $children;
+                        $isSubCategoryMode = true;
+                    }
+                } else {
+                    // It's a subcategory: find its parent main category
+                    $parent = $selectedCategory->parent;
+                    if ($parent) {
+                        $children = $parent->children()->active()->orderBy('sort_order')->orderBy('name')->get();
+                        if ($children->isNotEmpty()) {
+                            $parentCategory = $parent;
+                            $sliderCategories = $children;
+                            $isSubCategoryMode = true;
+                        }
+                    }
+                }
             }
         }
 
@@ -382,6 +407,11 @@ class ShopController extends Controller
 
 ## Notes
 
+- **Category & Sub-category Circle Slider**:
+  - Automatically identifies whether an active category filter has subcategories or is a subcategory itself.
+  - When a category with subcategories or a subcategory is selected, the circular slider displays the subcategories belonging to that parent category, styling the active subcategory with border and ring indicators.
+  - The "Parent / All" circle cleans only the `category` filter using `request()->fullUrlWithoutQuery(['category', 'page'])`, displaying all products while keeping other active filters (`purity`, `metal_type`, `in_stock`, `vendor_id`, etc.) intact.
+  - Categories missing an image automatically fall back to the generic gray placeholder (`product-placeholder.png`).
 - **AJAX Updates**: All filters, sort selections, pagination page links, and active tag removals intercept standard requests and perform a `fetch` query, retrieving JSON parts to swap in specific containers.
 - **Visual Feedback**: The product grid uses an opacity fade effect (`opacity-50`) while loading dynamic results.
 - **History Synchronization**: The History API (`history.pushState`) synchronizes queries in the address bar. The window `popstate` event listener enables back and forward button navigation.

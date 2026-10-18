@@ -7,9 +7,14 @@
 @section('content')
 
 {{-- ======================================================== --}}
-{{-- 1. MAIN CATEGORIES CIRCLE STORIES SLIDER (Dynamic from DB)--}}
+{{-- 1. CATEGORY CIRCLE STORIES SLIDER (Dynamic from DB)       --}}
 {{-- ======================================================== --}}
-@include('partials.category-circle-slider', ['categories' => $categories])
+@include('partials.category-circle-slider', [
+    'categories' => $categories,
+    'sliderCategories' => $sliderCategories ?? null,
+    'isSubCategoryMode' => $isSubCategoryMode ?? false,
+    'parentCategory' => $parentCategory ?? null,
+])
 
 {{-- ======================================================== --}}
 {{-- 2. MAIN CATALOG BODY (Breadcrumbs, Title, Filters, Grid) --}}
