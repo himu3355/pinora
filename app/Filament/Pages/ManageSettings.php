@@ -104,15 +104,18 @@ class ManageSettings extends Page implements HasForms
                             FileUpload::make('header_logo')
                                 ->label('Header Logo Image')
                                 ->image()
+                                ->disk('public')
                                 ->directory('settings')
                                 ->helperText('Optional: if not set, SVG branding is used.'),
                             FileUpload::make('footer_logo')
                                 ->label('Footer Logo Image')
                                 ->image()
+                                ->disk('public')
                                 ->directory('settings'),
                             FileUpload::make('favicon')
                                 ->label('Favicon')
                                 ->image()
+                                ->disk('public')
                                 ->directory('settings'),
                         ]),
                     ]),
@@ -192,6 +195,7 @@ class ManageSettings extends Page implements HasForms
                         FileUpload::make('og_image')
                             ->label('OpenGraph / Social Share Image')
                             ->image()
+                            ->disk('public')
                             ->directory('settings')
                             ->helperText('Recommended: 1200x630 px for WhatsApp, Facebook, Twitter previews.'),
                     ]),

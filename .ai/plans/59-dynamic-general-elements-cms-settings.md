@@ -106,5 +106,13 @@
 
 To seed or update a fresh live server with all settings, sliders, trust cards, policy pages, and FAQs:
 ```bash
-php artisan db:seed --class=GeneralSettingsSeeder
+php artisan db:seed --class=GeneralSettingsSeeder --force
 ```
+
+---
+
+- **Filament 5 Unified Actions Namespace**: In Filament v5, all table and record actions (`EditAction`, `DeleteAction`, `BulkActionGroup`, `DeleteBulkAction`) reside under `Filament\Actions\*` instead of `Filament\Tables\Actions\*`. Updated all resources to use the correct namespace.
+- **FileUpload Public Disk & APP_URL Alignment**:
+  - Public website assets (sliders, logos, CMS banners, category images) must be stored on the `public` disk (`->disk('public')`). If saved to `local` (private) storage, Laravel's `storage.local` route intercepts direct URL requests and denies unsigned access with `403 Forbidden`.
+  - For Filament's FilePond previewer to load existing images without being stuck on "Loading...", `APP_URL` in `.env` must match the actual host and port being browsed (e.g., `http://localhost:8000`). Mismatched ports (such as port 80 in `.env` vs port 8000 in browser) trigger CORS cross-origin blocks on FilePond's AJAX fetch requests.
+  - An NTFS directory junction (`mklink /J public\storage storage\app\public`) provides permanent direct static file serving on Windows environments.
