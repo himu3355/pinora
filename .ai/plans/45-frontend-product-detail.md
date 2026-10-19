@@ -128,7 +128,7 @@ class ProductController extends Controller
 {{-- 3. Right Column: Bestseller badge, Title, 4.8 Rating (126 reviews), Price (Inclusive of taxes), BIS Hallmarked Gold badge --}}
 {{-- 4. Pincode Delivery Estimator Box with Check Button --}}
 {{-- 5. Gold Purity Selector (22K Gold / 18K Gold) & Size Selector (Small / Medium / Large) --}}
-{{-- 6. Accordions: Product Details, Price Breakup, Shipping & Returns --}}
+{{-- 6. Accordions: Product Details (metal, purity, gross/net weight, pricing type), Price Breakup (metal value, labour, GST 3%, and metal rate effective date), Shipping & Returns --}}
 {{-- 7. Desktop CTA Buy Box + Mobile Sticky Bottom Action Bar with Add to Cart and Buy Now buttons --}}
 {{-- 8. You May Also Like Related Products Grid --}}
 ```

@@ -67,26 +67,27 @@ class PricingCalculatorSection
         // ── Price On Request ──────────────────────────────────────────────────
         if ($isPriceOnRequest) {
             return [
-                'product_type'        => $productType,
-                'is_price_on_request' => true,
-                'use_override'        => false,
-                'metal_type'          => $metalType,
-                'purity'              => $purity,
-                'weight_grams'        => $weightGrams,
-                'net_weight'          => $netWeight,
-                'loss'                => $loss,
-                'metal_rate_used'     => 0,
-                'metal_cost'          => 0,
-                'making_charges_rate' => $makingCharges,
-                'making_charges_type' => $makingChargesType,
-                'making_charges'      => 0,
-                'raw_cost'            => 0,
-                'discount_percent'    => 0,
-                'discount_amount'     => 0,
-                'subtotal'            => 0,
-                'gst_rate'            => 0,
-                'gst_amount'          => 0,
-                'total_price'         => 0,
+                'product_type'              => $productType,
+                'is_price_on_request'       => true,
+                'use_override'              => false,
+                'metal_type'                => $metalType,
+                'purity'                    => $purity,
+                'weight_grams'              => $weightGrams,
+                'net_weight'                => $netWeight,
+                'loss'                      => $loss,
+                'metal_rate_used'           => 0,
+                'metal_rate_effective_date' => null,
+                'metal_cost'                => 0,
+                'making_charges_rate'       => $makingCharges,
+                'making_charges_type'       => $makingChargesType,
+                'making_charges'            => 0,
+                'raw_cost'                  => 0,
+                'discount_percent'          => 0,
+                'discount_amount'           => 0,
+                'subtotal'                  => 0,
+                'gst_rate'                  => 0,
+                'gst_amount'                => 0,
+                'total_price'               => 0,
             ];
         }
 
@@ -95,38 +96,43 @@ class PricingCalculatorSection
         if ($productType === 'mrp_fixed') {
             $mrp = $basePrice ?? 0;
             return [
-                'product_type'        => 'mrp_fixed',
-                'is_price_on_request' => false,
-                'use_override'        => true,
-                'metal_type'          => $metalType,
-                'purity'              => $purity,
-                'weight_grams'        => round($weightGrams, 3),
-                'net_weight'          => round($netWeight, 3),
-                'loss'                => round($loss, 3),
-                'metal_rate_used'     => 0,
-                'metal_cost'          => 0,
-                'making_charges_rate' => $makingCharges,
-                'making_charges_type' => $makingChargesType,
-                'making_charges'      => 0,
-                'mrp_pieces'          => 1,
-                'raw_cost'            => round($mrp, 2),
-                'discount_percent'    => 0,
-                'discount_amount'     => 0,
-                'subtotal'            => round($mrp, 2),
-                'gst_rate'            => 0,
-                'gst_amount'          => 0,
-                'total_price'         => round($mrp, 2),
+                'product_type'              => 'mrp_fixed',
+                'is_price_on_request'       => false,
+                'use_override'              => true,
+                'metal_type'                => $metalType,
+                'purity'                    => $purity,
+                'weight_grams'              => round($weightGrams, 3),
+                'net_weight'                => round($netWeight, 3),
+                'loss'                      => round($loss, 3),
+                'metal_rate_used'           => 0,
+                'metal_rate_effective_date' => null,
+                'metal_cost'                => 0,
+                'making_charges_rate'       => $makingCharges,
+                'making_charges_type'       => $makingChargesType,
+                'making_charges'            => 0,
+                'mrp_pieces'                => 1,
+                'raw_cost'                  => round($mrp, 2),
+                'discount_percent'          => 0,
+                'discount_amount'           => 0,
+                'subtotal'                  => round($mrp, 2),
+                'gst_rate'                  => 0,
+                'gst_amount'                => 0,
+                'total_price'               => round($mrp, 2),
             ];
         }
 
         // ── Fetch metal rate ──────────────────────────────────────────────────
-        $metalRateUsed = 0.00;
-        $metalCost     = 0.00;
+        $metalRateUsed          = 0.00;
+        $metalCost              = 0.00;
+        $metalRateEffectiveDate = null;
 
         if (!empty($metalType) && !empty($purity)) {
-            $rateRecord    = MetalRate::getLatestRate($metalType, $purity);
-            $metalRateUsed = $rateRecord ? (float) $rateRecord->rate_per_gram : 0.00;
-            $metalCost     = $netWeight * $metalRateUsed;
+            $rateRecord             = MetalRate::getLatestRate($metalType, $purity);
+            $metalRateUsed          = $rateRecord ? (float) $rateRecord->rate_per_gram : 0.00;
+            $metalCost              = $netWeight * $metalRateUsed;
+            $metalRateEffectiveDate = $rateRecord && $rateRecord->effective_date
+                ? \Carbon\Carbon::parse($rateRecord->effective_date)->format('d M Y')
+                : null;
         }
 
         // ── Making / Labour charges ───────────────────────────────────────────
@@ -143,28 +149,29 @@ class PricingCalculatorSection
             $perPieceMrp    = round($totalBatchCost / $mrpPieces, 2);
 
             return [
-                'product_type'        => 'mrp_linked',
-                'is_price_on_request' => false,
-                'use_override'        => false,
-                'metal_type'          => $metalType,
-                'purity'              => $purity,
-                'weight_grams'        => round($weightGrams, 3),
-                'net_weight'          => round($netWeight, 3),
-                'loss'                => round($loss, 3),
-                'metal_rate_used'     => round($metalRateUsed, 2),
-                'metal_cost'          => round($metalCost, 2),
-                'making_charges_rate' => $makingCharges,
-                'making_charges_type' => $makingChargesType,
-                'making_charges'      => round($makingChargesAmount, 2),
-                'mrp_pieces'          => $mrpPieces,
-                'batch_cost'          => round($totalBatchCost, 2),
-                'raw_cost'            => $perPieceMrp,
-                'discount_percent'    => 0,
-                'discount_amount'     => 0,
-                'subtotal'            => $perPieceMrp,
-                'gst_rate'            => 0,
-                'gst_amount'          => 0,
-                'total_price'         => $perPieceMrp,
+                'product_type'              => 'mrp_linked',
+                'is_price_on_request'       => false,
+                'use_override'              => false,
+                'metal_type'                => $metalType,
+                'purity'                    => $purity,
+                'weight_grams'              => round($weightGrams, 3),
+                'net_weight'                => round($netWeight, 3),
+                'loss'                      => round($loss, 3),
+                'metal_rate_used'           => round($metalRateUsed, 2),
+                'metal_rate_effective_date' => $metalRateEffectiveDate,
+                'metal_cost'                => round($metalCost, 2),
+                'making_charges_rate'       => $makingCharges,
+                'making_charges_type'       => $makingChargesType,
+                'making_charges'            => round($makingChargesAmount, 2),
+                'mrp_pieces'                => $mrpPieces,
+                'batch_cost'                => round($totalBatchCost, 2),
+                'raw_cost'                  => $perPieceMrp,
+                'discount_percent'          => 0,
+                'discount_amount'           => 0,
+                'subtotal'                  => $perPieceMrp,
+                'gst_rate'                  => 0,
+                'gst_amount'                => 0,
+                'total_price'               => $perPieceMrp,
             ];
         }
 
@@ -183,26 +190,27 @@ class PricingCalculatorSection
             : round($totalRaw, 2);
 
         return [
-            'product_type'        => $productType,
-            'is_price_on_request' => false,
-            'use_override'        => false,
-            'metal_type'          => $metalType,
-            'purity'              => $purity,
-            'weight_grams'        => round($weightGrams, 3),
-            'net_weight'          => round($netWeight, 3),
-            'loss'                => round($loss, 3),
-            'metal_rate_used'     => round($metalRateUsed, 2),
-            'metal_cost'          => round($metalCost, 2),
-            'making_charges_rate' => $makingCharges,
-            'making_charges_type' => $makingChargesType,
-            'making_charges'      => round($makingChargesAmount, 2),
-            'raw_cost'            => round($rawCost, 2),
-            'discount_percent'    => $discountPercent,
-            'discount_amount'     => round($discountAmount, 2),
-            'subtotal'            => round($subtotal, 2),
-            'gst_rate'            => $gstRate,
-            'gst_amount'          => $gstAmount,
-            'total_price'         => $totalPrice,
+            'product_type'              => $productType,
+            'is_price_on_request'       => false,
+            'use_override'              => false,
+            'metal_type'                => $metalType,
+            'purity'                    => $purity,
+            'weight_grams'              => round($weightGrams, 3),
+            'net_weight'                => round($netWeight, 3),
+            'loss'                      => round($loss, 3),
+            'metal_rate_used'           => round($metalRateUsed, 2),
+            'metal_rate_effective_date' => $metalRateEffectiveDate,
+            'metal_cost'                => round($metalCost, 2),
+            'making_charges_rate'       => $makingCharges,
+            'making_charges_type'       => $makingChargesType,
+            'making_charges'            => round($makingChargesAmount, 2),
+            'raw_cost'                  => round($rawCost, 2),
+            'discount_percent'          => $discountPercent,
+            'discount_amount'           => round($discountAmount, 2),
+            'subtotal'                  => round($subtotal, 2),
+            'gst_rate'                  => $gstRate,
+            'gst_amount'                => $gstAmount,
+            'total_price'               => $totalPrice,
         ];
     }
 }

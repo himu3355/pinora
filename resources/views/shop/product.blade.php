@@ -383,6 +383,17 @@
                                 <td class="py-2 text-right font-bold text-sm text-[#083B2B]">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
                             </tr>
                         </table>
+                        @if (!empty($pricing['metal_rate_effective_date']))
+                            <div class="mt-2.5 pt-2 border-t border-[#FAF8F5] text-[0.72rem] text-gray-500 flex items-center justify-between">
+                                <span class="flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-emerald-600">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Metal Rate Effective Date:
+                                </span>
+                                <span class="font-semibold text-[#142E25]">{{ $pricing['metal_rate_effective_date'] }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

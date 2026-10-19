@@ -2,7 +2,7 @@
     use App\Filament\Components\PricingCalculatorSection;
 
     // Read live form values from the Livewire component's data
-    $formData = $this->data ?? [];
+    $formData = (isset($this) ? ($this->data ?? []) : null) ?? ($formData ?? []);
 
     $productType       = data_get($formData, 'product_type', 'jewellery');
     $metalType         = data_get($formData, 'metal_type');
@@ -93,10 +93,13 @@
                         </span>
                     </div>
                     @if (!$breakdown['use_override'] && ($breakdown['metal_rate_used'] ?? 0) > 0)
-                        <span class="text-xs font-medium px-2 py-1 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">
-                            {{ $metalLabels[$breakdown['metal_type']] ?? ucfirst($breakdown['metal_type'] ?? '') }}
-                            {{ $breakdown['purity'] ?? '' }}
-                            · ₹{{ number_format($breakdown['metal_rate_used'], 2) }}/g
+                        <span class="text-xs font-medium px-2 py-1 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 flex items-center gap-1.5">
+                            <span>{{ $metalLabels[$breakdown['metal_type']] ?? ucfirst($breakdown['metal_type'] ?? '') }} {{ $breakdown['purity'] ?? '' }} · ₹{{ number_format($breakdown['metal_rate_used'], 2) }}/g</span>
+                            @if (!empty($breakdown['metal_rate_effective_date']))
+                                <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-primary-200/80 dark:bg-primary-800 text-primary-800 dark:text-primary-200 font-semibold">
+                                    Effective: {{ $breakdown['metal_rate_effective_date'] }}
+                                </span>
+                            @endif
                         </span>
                     @endif
                 </div>
@@ -147,6 +150,11 @@
                             <span class="text-xs text-gray-400 dark:text-gray-500 ml-1">
                                 ({{ number_format($breakdown['net_weight'], 3) }}g × ₹{{ number_format($breakdown['metal_rate_used'], 2) }}/g)
                             </span>
+                            @if (!empty($breakdown['metal_rate_effective_date']))
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 ml-1">
+                                    Rate: {{ $breakdown['metal_rate_effective_date'] }}
+                                </span>
+                            @endif
                         </span>
                         <span class="text-sm font-medium text-gray-900 dark:text-gray-100">₹{{ number_format($breakdown['metal_cost'], 2) }}</span>
                     </div>
@@ -253,10 +261,16 @@
 
         {{-- Note about metal rates --}}
         @if (!$breakdown['use_override'] && $breakdown['product_type'] !== 'mrp_fixed')
-            <p class="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                <x-filament::icon icon="heroicon-m-information-circle" class="h-3.5 w-3.5 shrink-0" />
-                Metal rates are fetched from the latest available rate. Price updates automatically when rates change.
-            </p>
+            <div class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <x-filament::icon icon="heroicon-m-information-circle" class="h-4 w-4 shrink-0 text-gray-400 dark:text-gray-500" />
+                <span>
+                    @if (!empty($breakdown['metal_rate_effective_date']))
+                        Metal rates applied from <strong class="font-semibold text-gray-700 dark:text-gray-200">{{ $breakdown['metal_rate_effective_date'] }}</strong>. Price updates automatically when rates change.
+                    @else
+                        Metal rates are fetched from the latest available rate. Price updates automatically when rates change.
+                    @endif
+                </span>
+            </div>
         @endif
     @endif
 </div>

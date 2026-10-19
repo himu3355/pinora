@@ -77,28 +77,52 @@ class ProductResource extends Resource
                         ->columnSpanFull(),
                 ])->columns(2),
 
-            Forms\Components\Section::make('Metal & Stone Details')
+            Forms\Components\Section::make('Metal, Stone & Pricing Calculations')
                 ->schema([
-                    Forms\Components\Select::make('metal_type')
-                        ->options([
-                            'gold'     => 'Gold',
-                            'silver'   => 'Silver',
-                            'platinum' => 'Platinum',
-                            'other'    => 'Other',
-                        ])
-                        ->required()
-                        ->live(),
+                    Grid::make(3)->schema([
+                        Select::make('product_type')
+                            ->label('Product / Pricing Type')
+                            ->options([
+                                'jewellery'  => '💍 Jewellery',
+                                'coin_bar'   => '🪙 Coin / Bar',
+                                'mrp_fixed'  => '🏷️ MRP Fixed',
+                                'mrp_linked' => '🔗 MRP Linked (Rate-Based)',
+                            ])
+                            ->default('jewellery')
+                            ->required()
+                            ->live()
+                            ->helperText('Controls which pricing formula is used.'),
 
-                    Forms\Components\Select::make('purity')
-                        ->options([
-                            '24K' => '24K',
-                            '22K' => '22K',
-                            '18K' => '18K',
-                            '14K' => '14K',
-                            '925' => '925 Sterling Silver',
-                            '950' => '950 Platinum',
-                        ])
-                        ->required(),
+                        Select::make('metal_type')
+                            ->options([
+                                'gold'     => 'Gold',
+                                'silver'   => 'Silver',
+                                'platinum' => 'Platinum',
+                                'other'    => 'Other',
+                            ])
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('purity', null)),
+
+                        Select::make('purity')
+                            ->options(fn (Get $get) => match ($get('metal_type')) {
+                                'gold'     => ['24K' => '24K (999)', '22K' => '22K (916)', '18K' => '18K (750)', '14K' => '14K (585)'],
+                                'silver'   => ['999' => '999 (Fine)', '925' => '925 (Sterling)'],
+                                'platinum' => ['950' => '950'],
+                                default    => [],
+                            })
+                            ->live()
+                            ->disabled(fn (Get $get) => blank($get('metal_type')))
+                            ->helperText(function (Get $get): ?string {
+                                $metal = $get('metal_type');
+                                $purity = $get('purity');
+                                if (!$metal || !$purity) return null;
+                                $rate = \App\Models\MetalRate::getLatestRate($metal, $purity);
+                                if (!$rate) return 'No live rate found for this metal & purity';
+                                $date = $rate->effective_date ? \Illuminate\Support\Carbon::parse($rate->effective_date)->format('d M Y') : 'N/A';
+                                return "Live Rate: ₹" . number_format((float) $rate->rate_per_gram, 2) . "/g (Effective: {$date})";
+                            }),
+                    ]),
 
                     Forms\Components\TextInput::make('weight_grams')
                         ->label('Weight (grams)')

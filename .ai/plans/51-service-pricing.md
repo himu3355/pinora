@@ -40,12 +40,14 @@ Unlike standard e-commerce products with static prices, fine jewellery pricing i
 
 ---
 
-## Files Modified (2026-10-15)
+## Files Modified (2026-10-15 & 2026-10-18)
 
-- `app/Services/PricingService.php` — full rewrite with 4 product type support, GST, floor, net weight
-- `app/Filament/Components/PricingCalculatorSection.php` — matching rewrite for live admin calculator
-- `resources/views/filament/components/pricing-calculator.blade.php` — UI shows net weight breakdown, GST line, coin floor note
-- `app/Filament/Resources/Products/Schemas/ProductForm.php` — added `product_type`, `mrp_pieces` fields; rewired all pricing fields with `->live(onBlur: true)`
+- `app/Services/PricingService.php` — full rewrite with 4 product type support, GST, floor, net weight, plus `metal_rate_effective_date` returned in all pricing breakdowns.
+- `app/Filament/Components/PricingCalculatorSection.php` — live calculator engine returning `metal_rate_effective_date`.
+- `resources/views/filament/components/pricing-calculator.blade.php` — UI shows metal rate effective date in the top pill badge, in the "Metal Value" row, and in the bottom disclaimer note.
+- `app/Filament/Resources/Products/Schemas/ProductForm.php` — `product_type` & `purity` made instant `->live()`, with purity `->helperText()` displaying live rate and effective date.
+- `app/Filament/Vendor/Resources/ProductResource.php` — vendor product form mirrors the admin form with instant `->live()` purity and live rate/effective date helperText.
+- `resources/views/shop/product.blade.php` — storefront price breakup accordion displays the metal rate effective date.
 - `database/migrations/2026_10_15_000001_add_product_type_to_products_table.php` — adds `product_type` enum and `mrp_pieces` int
 - `app/Models/Product.php` — `product_type` and `mrp_pieces` added to `$fillable` and `casts()`
 

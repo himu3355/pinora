@@ -7,8 +7,10 @@ use App\Filament\Vendor\Resources\ProductResource\Pages\CreateProduct;
 use App\Filament\Vendor\Resources\ProductResource\Pages\EditProduct;
 use App\Filament\Vendor\Resources\ProductResource\Pages\ListProducts;
 use App\Models\Category;
+use App\Models\MetalRate;
 use App\Models\Product;
 use App\Services\VendorContext;
+use Illuminate\Support\Carbon;
 use BackedEnum;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
@@ -129,7 +131,7 @@ class ProductResource extends Resource
                             ])
                             ->default('jewellery')
                             ->required()
-                            ->live(onBlur: true)
+                            ->live()
                             ->helperText('Controls which pricing formula is used.'),
 
                         Select::make('metal_type')
@@ -150,8 +152,23 @@ class ProductResource extends Resource
                                 'platinum' => ['950' => '950'],
                                 default    => [],
                             })
-                            ->live(onBlur: true)
-                            ->disabled(fn (Get $get) => blank($get('metal_type'))),
+                            ->live()
+                            ->disabled(fn (Get $get) => blank($get('metal_type')))
+                            ->helperText(function (Get $get): ?string {
+                                $metal = $get('metal_type');
+                                $purity = $get('purity');
+                                if (!$metal || !$purity) {
+                                    return null;
+                                }
+                                $rate = MetalRate::getLatestRate($metal, $purity);
+                                if (!$rate) {
+                                    return 'No live rate found for this metal & purity';
+                                }
+                                $date = $rate->effective_date
+                                    ? Carbon::parse($rate->effective_date)->format('d M Y')
+                                    : 'N/A';
+                                return "Live Rate: ₹" . number_format((float) $rate->rate_per_gram, 2) . "/g (Effective: {$date})";
+                            }),
                     ]),
 
                     Grid::make(3)->schema([

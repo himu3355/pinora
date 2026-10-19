@@ -10,6 +10,10 @@ class TodayMetalRatesWidget extends StatsOverviewWidget
 {
     protected ?string $pollingInterval = '60s';
 
+    protected $listeners = [
+        'metal-rates-updated' => '$refresh',
+    ];
+
     protected function getStats(): array
     {
         $today = today()->toDateString();
@@ -46,6 +50,11 @@ class TodayMetalRatesWidget extends StatsOverviewWidget
             }
             if ($gold18) {
                 $stats[] = Stat::make('Gold 18K', $format($gold18))
+                    ->description('Today — ' . today()->format('d M Y'))
+                    ->color('warning');
+            }
+            if ($gold14) {
+                $stats[] = Stat::make('Gold 14K', $format($gold14))
                     ->description('Today — ' . today()->format('d M Y'))
                     ->color('warning');
             }

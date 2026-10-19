@@ -5,15 +5,17 @@ Create a Filament 5 Resource for daily metal rate entry. Includes a custom List 
 
 ---
 
-## Files to Create
+## Files to Create & Maintain
 
 | File | Purpose |
 |------|---------|
-| `app/Filament/Resources/MetalRateResource.php` | Main resource class |
-| `app/Filament/Resources/MetalRateResource/Pages/ListMetalRates.php` | List page with today's rates header widget & on-demand Sync action |
-| `app/Filament/Resources/MetalRateResource/Pages/CreateMetalRate.php` | Create page |
-| `app/Filament/Resources/MetalRateResource/Pages/EditMetalRate.php` | Edit page |
-| `app/Filament/Widgets/TodayMetalRatesWidget.php` | Header stats panel widget |
+| `app/Filament/Pages/TodayMetalRates.php` | All-in-one daily metal rate entry page for all metals categorized by their quality |
+| `resources/views/filament/pages/today-metal-rates.blade.php` | Blade view for all-in-one daily rate entry with quick calculation & pre-fill tools |
+| `app/Filament/Resources/MetalRates/MetalRateResource.php` | Main resource class for rates history |
+| `app/Filament/Resources/MetalRates/Pages/ListMetalRates.php` | List page with today's rates header widget, quick link to All-in-One entry & on-demand Sync |
+| `app/Filament/Resources/MetalRates/Pages/CreateMetalRate.php` | Create page for single rate entry |
+| `app/Filament/Resources/MetalRates/Pages/EditMetalRate.php` | Edit page |
+| `app/Filament/Widgets/TodayMetalRatesWidget.php` | Header stats panel widget (Gold 24K/22K/18K/14K, Silver 999/925, Platinum 950) |
 | `app/Services/MetalRateSyncService.php` | Syncs metal rates from GoldAPI on-demand |
 
 ---
@@ -440,84 +442,103 @@ class EditMetalRate extends EditRecord
 namespace App\Services;
 
 use App\Models\MetalRate;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class MetalRateSyncService
 {
-    /**
-     * Fetch daily metal rates from GoldAPI and store them.
-     */
-    public function sync(): bool
+    protected ?string $lastError = null;
+
+    public function getLastError(): ?string
     {
-        try {
-            $apiKey = config('services.goldapi.key');
-            if (blank($apiKey)) {
-                Log::warning('MetalRateSyncService: GoldAPI token is not configured.');
-                return false;
-            }
-
-            // 1. Sync Gold (XAU) 24K in INR
-            $goldResponse = Http::withHeaders([
-                'x-access-token' => $apiKey
-            ])->get('https://www.goldapi.io/api/XAU/INR');
-
-            if ($goldResponse->successful()) {
-                $goldData = $goldResponse->json();
-                $rate24K = $goldData['price_gram_24k'] ?? null;
-                
-                if ($rate24K) {
-                    // Save 24K rate
-                    $this->updateRate('gold', '24K', $rate24K);
-                    // Calculate 22K (91.67%), 18K (75%), 14K (58.33%) standard purity ratios
-                    $this->updateRate('gold', '22K', $rate24K * 0.9167);
-                    $this->updateRate('gold', '18K', $rate24K * 0.75);
-                }
-            } else {
-                Log::warning('MetalRateSyncService: Gold price fetch failed with response ' . $goldResponse->status());
-            }
-
-            // 2. Sync Silver (XAG) in INR
-            $silverResponse = Http::withHeaders([
-                'x-access-token' => $apiKey
-            ])->get('https://www.goldapi.io/api/XAG/INR');
-
-            if ($silverResponse->successful()) {
-                $silverData = $silverResponse->json();
-                // GoldAPI returns price per gram for silver 24k (pure silver) under price_gram_24k
-                $ratePureSilver = $silverData['price_gram_24k'] ?? null;
-
-                if ($ratePureSilver) {
-                    $this->updateRate('silver', '999', $ratePureSilver);
-                    $this->updateRate('silver', '925', $ratePureSilver * 0.925);
-                }
-            } else {
-                Log::warning('MetalRateSyncService: Silver price fetch failed with response ' . $silverResponse->status());
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            Log::error('MetalRateSyncService exception: ' . $e->getMessage());
-            return false;
-        }
+        return $this->lastError;
     }
 
-    protected function updateRate(string $metalType, string $purity, float $ratePerGram): void
+    protected function createClient(string $apiKey)
     {
-        MetalRate::updateOrCreate(
-            [
-                'metal_type' => $metalType,
-                'purity' => $purity,
-                'effective_date' => today()->toDateString(),
-            ],
-            [
-                'rate_per_gram' => round($ratePerGram, 2),
-                'notes' => 'Synced via GoldAPI on ' . now()->toDateTimeString(),
-            ]
-        );
+        $client = Http::withHeaders([
+            'x-access-token' => $apiKey,
+            'Content-Type'   => 'application/json',
+        ])->timeout(12);
+
+        if (app()->environment('local') || config('app.debug')) {
+            $client = $client->withoutVerifying();
+        }
+
+        return $client;
+    }
+
+    public function sync(?string $overrideApiKey = null, bool $force = false): bool
+    {
+        // Enforces once-daily syncing to stay within 100 requests/month quota (3 requests/day = 90/month)
+        // Checks hasSyncedToday(); blocks duplicate syncs unless $force = true
+        // Fetches key from override, Setting::get('goldapi_key'), config('services.goldapi.key'), or env('GOLDAPI_KEY')
+        // Syncs XAU (Gold 24K, 22K, 18K, 14K), XAG (Silver 999, 925), and XPT (Platinum 950) in INR
+        // Records sync timestamp in settings and flushes rate cache
     }
 }
 ```
+
+---
+
+### `app/Filament/Pages/TodayMetalRates.php` (All-in-One Daily Rates Entry Page)
+
+Allows entry of today's metal prices for all metals categorized by their quality (Gold 24K, 22K, 18K, 14K; Silver 999, 925; Platinum 950) in a single unified form with one-click proportional calculations and pre-filling.
+
+```php
+<?php
+
+namespace App\Filament\Pages;
+
+use App\Filament\Resources\MetalRates\MetalRateResource;
+use App\Filament\Widgets\TodayMetalRatesWidget;
+use App\Models\MetalRate;
+use App\Services\MetalRateSyncService;
+use BackedEnum;
+use Carbon\Carbon;
+use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\DB;
+
+class TodayMetalRates extends Page implements HasForms
+{
+    use InteractsWithForms;
+
+    protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedCurrencyRupee;
+    protected static ?string $navigationLabel = "Today's Metal Rates";
+    protected static ?string $title = "Today's Metal Rates Entry";
+    protected static ?int $navigationSort = 24;
+    protected string $view = 'filament.pages.today-metal-rates';
+
+    public ?array $data = [];
+    public array $latestPreviousRates = [];
+
+    // Form schema categorizes rates into Date/Notes, Gold (24K, 22K, 18K, 14K),
+    // Silver (999, 925), and Platinum (950) with previous rate displays.
+    // Methods include:
+    // - autoCalculateGold(): Calculates 22K (91.67%), 18K (75%), and 14K (58.33%) from 24K rate
+    // - autoCalculateSilver(): Calculates 925 (92.5%) from 999 rate
+    // - copyPreviousRates(): Pre-fills inputs with latest recorded prices from previous dates
+    // - syncFromGoldApi(): Fetches live bullion rates on demand
+    // - save(bool $redirectToList = false): Atomically saves all entered rates, flushes cache, and dispatches events
+}
+```
+
+---
+
+### `resources/views/filament/pages/today-metal-rates.blade.php`
+
+Blade template featuring a quick-action toolbar (Pre-fill Latest Rates, Sync Live API, Clear All), the main categorized form, live reactive stats widget at the top, and dual action buttons (Save Today's Rates, Save & View History).
 
 ---
 

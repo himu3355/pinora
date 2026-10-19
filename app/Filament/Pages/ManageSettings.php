@@ -74,6 +74,9 @@ class ManageSettings extends Page implements HasForms
             'footer_about_text' => $all['footer_about_text'] ?? "Rajkot's premier specialist for handcrafted 22K gold nose pins. Hallmarked, guaranteed, and delivered with insured transit across India.",
             'bis_hallmark_text' => $all['bis_hallmark_text'] ?? '100% Certified 22K BIS Hallmarked Gold',
             'copyright_text' => $all['copyright_text'] ?? 'PINORA. All Rights Reserved. Rajkot, Gujarat, India.',
+
+            // Live Bullion API (GoldAPI)
+            'goldapi_key' => $all['goldapi_key'] ?? env('GOLDAPI_KEY', ''),
         ]);
     }
 
@@ -215,6 +218,18 @@ class ManageSettings extends Page implements HasForms
                                 ->label('Footer Copyright Statement')
                                 ->default('PINORA. All Rights Reserved. Rajkot, Gujarat, India.'),
                         ]),
+                    ]),
+
+                // Tab 7: Live Bullion API (GoldAPI.io)
+                Tab::make('Bullion API (GoldAPI)')
+                    ->icon('heroicon-o-key')
+                    ->schema([
+                        TextInput::make('goldapi_key')
+                            ->label('GoldAPI Access Token')
+                            ->password()
+                            ->revealable()
+                            ->placeholder('e.g. goldapi-xxxxxxxxxxxx-io')
+                            ->helperText('Token from https://www.goldapi.io to fetch live daily market bullion rates in INR. Can also be set via GOLDAPI_KEY in .env.'),
                     ]),
 
             ]),
