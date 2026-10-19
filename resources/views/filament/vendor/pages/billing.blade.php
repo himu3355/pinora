@@ -45,7 +45,7 @@
 
                     <div class="border-t border-gray-100 dark:border-gray-800 pt-4 space-y-2">
                         <div class="flex justify-between text-sm">
-                            <span class="text-gray-500 dark:text-gray-400">Subscription ID</span>
+                            <span class="text-gray-500 dark:text-gray-400">Subscription Ref</span>
                             <span class="font-mono text-gray-900 dark:text-gray-100">{{ auth()->user()->vendor->subscription->stripe_subscription_id ?? 'None' }}</span>
                         </div>
                         <div class="flex justify-between text-sm">
@@ -90,22 +90,14 @@
                             </div>
                             
                             <div class="pt-4 border-t border-gray-100 dark:border-gray-800">
-                                @if ($isStripeConfigured)
-                                    <x-filament::button
-                                        wire:click="subscribe({{ $plan['id'] }})"
-                                        size="lg"
-                                        class="w-full"
-                                        icon="heroicon-m-credit-card"
-                                    >
-                                        Subscribe Now
-                                    </x-filament::button>
-                                @else
-                                    <div class="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-center">
-                                        <p class="text-xs text-gray-600 dark:text-gray-400">
-                                            Stripe online checkout is disabled. Please contact the administrator to activate this plan.
-                                        </p>
-                                    </div>
-                                @endif
+                                <x-filament::button
+                                    wire:click="subscribe({{ $plan['id'] }})"
+                                    size="lg"
+                                    class="w-full"
+                                    icon="heroicon-m-check-badge"
+                                >
+                                    Select Plan
+                                </x-filament::button>
                             </div>
                         </x-filament::section>
                     @endforeach

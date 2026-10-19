@@ -89,6 +89,10 @@ class CheckoutController extends Controller
 
         $this->cart->clear();
 
+        if ($validated['payment_method'] === 'razorpay') {
+            return redirect()->route('payment.initiate', $order->order_number);
+        }
+
         return redirect()->route('order.confirmation', $order->order_number);
     }
 }

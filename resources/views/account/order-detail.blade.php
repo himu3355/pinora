@@ -26,6 +26,11 @@
                         @else bg-yellow-500/10 text-yellow-400 @endif">
                         Payment: {{ $order->payment_status }}
                     </span>
+                    @if($order->payment_method === 'razorpay' && $order->payment_status !== 'paid' && $order->status !== 'cancelled')
+                        <a href="{{ route('payment.initiate', $order->order_number) }}" class="btn btn-gold text-xs px-4 py-1.5 justify-center">
+                            Complete Payment →
+                        </a>
+                    @endif
                 </div>
             </div>
 

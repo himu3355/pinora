@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', \App\Http\Middleware\CheckImpersonation::class);
         $middleware->validateCsrfTokens(except: [
-            'webhooks/stripe',
+            'payment/webhook',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

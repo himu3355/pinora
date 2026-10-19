@@ -68,6 +68,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/{orderNumber}/confirmation', [OrderController::class, 'confirmation'])->name('order.confirmation');
     Route::get('/orders/{orderNumber}', [OrderController::class, 'show'])->name('order.show');
 
+    // Payment routes (Razorpay)
+    Route::get('/payment/{orderNumber}/pay', [\App\Http\Controllers\Frontend\PaymentController::class, 'initiate'])->name('payment.initiate');
+    Route::post('/payment/callback', [\App\Http\Controllers\Frontend\PaymentController::class, 'callback'])->name('payment.callback');
+
     // Customer Account Routes
     Route::prefix('account')->name('account.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Frontend\AccountController::class, 'dashboard'])->name('dashboard');
@@ -87,8 +91,8 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Stripe Webhook
-Route::post('/webhooks/stripe', [\App\Http\Controllers\StripeWebhookController::class, 'handle'])->name('stripe.webhook');
+// Razorpay Webhook
+Route::post('/payment/webhook', [\App\Http\Controllers\Frontend\PaymentController::class, 'webhook'])->name('payment.webhook');
 
 // CMS Pages, Support & General Content
 Route::get('/about', [\App\Http\Controllers\Frontend\PageController::class, 'about'])->name('about');

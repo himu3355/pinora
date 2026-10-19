@@ -60,11 +60,14 @@
                                 <div class="text-[0.78rem] text-text-muted">Pay when you receive your order</div>
                             </div>
                         </label>
-                        <label class="flex gap-4 p-4 border border-border-gold rounded-lg cursor-not-allowed items-center opacity-60">
-                            <input type="radio" name="payment_method" value="razorpay" disabled class="accent-gold">
-                            <div>
-                                <div class="font-semibold text-[0.9rem] text-text-light">Online Payment <span class="text-gold text-[0.7rem]">(Coming Soon)</span></div>
-                                <div class="text-[0.78rem] text-text-muted">UPI, Cards, Net Banking via Razorpay</div>
+                        <label class="flex gap-4 p-4 border border-border-gold rounded-lg cursor-pointer items-center hover:border-gold transition-colors">
+                            <input type="radio" name="payment_method" value="razorpay" class="accent-gold">
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-[0.9rem] text-text-light">Online Payment (Razorpay)</span>
+                                    <span class="text-xs text-gold border border-gold/30 px-2 py-0.5 rounded font-mono">UPI / Cards / NetBanking</span>
+                                </div>
+                                <div class="text-[0.78rem] text-text-muted mt-0.5">Instant confirmation via UPI, Credit/Debit Cards, Net Banking & Wallets</div>
                             </div>
                         </label>
                     </div>

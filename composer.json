@@ -15,9 +15,9 @@
         "laravel/framework": "^13.8",
         "laravel/socialite": "*",
         "laravel/tinker": "^3.0",
+        "razorpay/razorpay": "^2.9",
         "redberry/page-builder-plugin": "^3.0",
-        "spatie/laravel-permission": "^7",
-        "stripe/stripe-php": "^20.2"
+        "spatie/laravel-permission": "^7"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

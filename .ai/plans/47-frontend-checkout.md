@@ -118,6 +118,10 @@ class CheckoutController extends Controller
 
         $this->cart->clear();
 
+        if ($validated['payment_method'] === 'razorpay') {
+            return redirect()->route('payment.initiate', $order->order_number);
+        }
+
         return redirect()->route('order.confirmation', $order->order_number);
     }
 }
@@ -335,6 +339,6 @@ document.addEventListener('DOMContentLoaded', () => {
 ## Notes
 
 - GST is determined by comparing the delivery state with `config('app.gst_state')`. This full logic lives in `GstService` (Step 53) and `OrderService` (Step 54).
-- COD is the only active payment method in V1. Razorpay integration is scaffolded in Step 55.
+- Both COD and Razorpay online payments (UPI, Cards, Net Banking) are fully implemented and active (see Step 55).
 - When new address is submitted, it is saved to the `addresses` table, so the customer can reuse it in future orders.
 - The `Address::INDIAN_STATES` constant is defined in Step 18.

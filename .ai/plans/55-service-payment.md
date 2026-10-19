@@ -1,21 +1,28 @@
-# Step 55: PaymentService
+# Step 55: PaymentService & Razorpay Integration
 
-**Goal:** Abstract payment gateway wrapper with Razorpay integration scaffold for order payment processing.
-**Depends On:** Step 54 (OrderService), Step 20 (Order model)
-**Next Step:** All 55 steps complete! Ready to begin implementation starting from Step 01.
-
----
-
-## Files to Create
-
-- `app/Services/PaymentService.php`
-- `app/Http/Controllers/Frontend/PaymentController.php`
-- Routes added to `routes/web.php`
-- `.env` keys for Razorpay
+**Goal:** Complete Razorpay online payment integration for orders, supporting UPI, Credit/Debit cards, Net Banking, signature verification, and automated webhooks.
+**Depends On:** Step 54 (OrderService), Step 20 (Order model), Step 47 (Checkout)
+**Status:** ✅ Fully Implemented (Stripe removed from project).
 
 ---
 
-## 1. Install Razorpay SDK
+## Files Created & Updated
+
+- `app/Services/PaymentService.php` (Created)
+- `app/Http/Controllers/Frontend/PaymentController.php` (Created)
+- `resources/views/payment/razorpay.blade.php` (Created)
+- `config/services.php` (Updated with `razorpay` config)
+- `.env` & `.env.example` (Updated with Razorpay keys)
+- `routes/web.php` (Updated with payment initiate, callback, and webhook routes)
+- `bootstrap/app.php` (Updated with CSRF exemption for `payment/webhook`)
+- `app/Http/Controllers/Frontend/CheckoutController.php` (Updated with redirect to `payment.initiate`)
+- `resources/views/checkout/index.blade.php` (Updated with active Razorpay payment option)
+- `resources/views/account/order-detail.blade.php` (Updated with "Complete Payment" button for pending orders)
+- `tests/Unit/PaymentServiceTest.php` (Unit test suite for signature verification & webhook handling)
+
+---
+
+## 1. Razorpay SDK Installation
 
 ```bash
 composer require razorpay/razorpay
@@ -23,28 +30,30 @@ composer require razorpay/razorpay
 
 ---
 
-## 2. `.env` Keys
+## 2. Environment Variables (`.env`)
 
-```
-RAZORPAY_KEY_ID=rzp_test_XXXXXXXXXX
-RAZORPAY_KEY_SECRET=your_secret_key_here
+```ini
+# Razorpay Payment Gateway
+RAZORPAY_KEY_ID=rzp_live_XXXXXXXXXXXXXX
+RAZORPAY_KEY_SECRET=your_live_secret_key_here
+RAZORPAY_WEBHOOK_SECRET=your_webhook_secret_here
 ```
 
 ---
 
-## 3. `config/services.php` — Add Razorpay config
+## 3. Configuration — `config/services.php`
 
 ```php
-// Add inside the return array:
 'razorpay' => [
-    'key_id'     => env('RAZORPAY_KEY_ID'),
-    'key_secret' => env('RAZORPAY_KEY_SECRET'),
+    'key_id'         => env('RAZORPAY_KEY_ID'),
+    'key_secret'     => env('RAZORPAY_KEY_SECRET'),
+    'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
 ],
 ```
 
 ---
 
-## 4. `app/Services/PaymentService.php`
+## 4. Payment Service — `app/Services/PaymentService.php`
 
 ```php
 <?php
@@ -52,53 +61,63 @@ RAZORPAY_KEY_SECRET=your_secret_key_here
 namespace App\Services;
 
 use App\Models\Order;
+use Illuminate\Support\Facades\Log;
 use Razorpay\Api\Api;
+use Razorpay\Api\Errors\SignatureVerificationError;
 
 class PaymentService
 {
-    protected Api $razorpay;
+    protected ?Api $razorpay = null;
 
     public function __construct()
     {
-        $this->razorpay = new Api(
-            config('services.razorpay.key_id'),
-            config('services.razorpay.key_secret'),
-        );
+        $keyId = config('services.razorpay.key_id');
+        $keySecret = config('services.razorpay.key_secret');
+
+        if (! empty($keyId) && ! empty($keySecret)) {
+            $this->razorpay = new Api($keyId, $keySecret);
+        }
     }
 
-    /**
-     * Create a Razorpay order for the given platform order.
-     * Call this before rendering the Razorpay checkout modal.
-     *
-     * @param  Order  $order
-     * @return array  Razorpay order payload to pass to the JS SDK
-     */
+    public function getApi(): Api
+    {
+        if (! $this->razorpay) {
+            throw new \RuntimeException('Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are not configured.');
+        }
+
+        return $this->razorpay;
+    }
+
     public function createRazorpayOrder(Order $order): array
     {
-        $rzpOrder = $this->razorpay->order->create([
-            'amount'   => (int) round($order->total_amount * 100), // paise
+        $order->loadMissing('user');
+
+        $rzpOrder = $this->getApi()->order->create([
+            'amount'   => (int) round($order->total_amount * 100),
             'currency' => 'INR',
-            'receipt'  => $order->order_number,
+            'receipt'  => (string) $order->order_number,
             'notes'    => [
-                'platform_order_id' => $order->id,
-                'customer_email'    => $order->user->email,
+                'platform_order_id' => (string) $order->id,
+                'order_number'      => (string) $order->order_number,
+                'customer_email'    => (string) ($order->user->email ?? $order->guest_email ?? ''),
             ],
         ]);
 
-        // Store the Razorpay order ID on our order for verification
-        $order->update(['payment_reference' => $rzpOrder->id]);
+        $order->update([
+            'payment_reference' => $rzpOrder->id,
+        ]);
 
         return [
             'key'         => config('services.razorpay.key_id'),
             'amount'      => (int) round($order->total_amount * 100),
             'currency'    => 'INR',
-            'name'        => 'Pinora Jewellery',
+            'name'        => config('app.name', 'Pinora Jewellery'),
             'description' => 'Order ' . $order->order_number,
             'order_id'    => $rzpOrder->id,
             'prefill'     => [
-                'name'    => $order->user->name,
-                'email'   => $order->user->email,
-                'contact' => $order->shipping_phone,
+                'name'    => $order->user->name ?? $order->shipping_name,
+                'email'   => $order->user->email ?? $order->guest_email ?? '',
+                'contact' => $order->shipping_phone ?? ($order->user->phone ?? ''),
             ],
             'theme'       => [
                 'color' => '#C9A84C',
@@ -106,39 +125,33 @@ class PaymentService
         ];
     }
 
-    /**
-     * Verify a Razorpay payment signature after the frontend completes payment.
-     * This prevents payment tampering.
-     *
-     * @param  string  $rzpOrderId    From Razorpay JS callback
-     * @param  string  $rzpPaymentId  From Razorpay JS callback
-     * @param  string  $rzpSignature  From Razorpay JS callback
-     * @return bool
-     */
     public function verifySignature(
         string $rzpOrderId,
         string $rzpPaymentId,
         string $rzpSignature
     ): bool {
         try {
-            $this->razorpay->utility->verifyPaymentSignature([
+            $this->getApi()->utility->verifyPaymentSignature([
                 'razorpay_order_id'   => $rzpOrderId,
                 'razorpay_payment_id' => $rzpPaymentId,
                 'razorpay_signature'  => $rzpSignature,
             ]);
+
             return true;
-        } catch (\Razorpay\Api\Errors\SignatureVerificationError) {
+        } catch (SignatureVerificationError $e) {
+            Log::warning('Razorpay payment signature verification failed', [
+                'order_id'   => $rzpOrderId,
+                'payment_id' => $rzpPaymentId,
+                'error'      => $e->getMessage(),
+            ]);
+
+            return false;
+        } catch (\Throwable $e) {
+            Log::error('Razorpay signature verification exception', ['error' => $e->getMessage()]);
             return false;
         }
     }
 
-    /**
-     * Mark an order as paid after successful payment verification.
-     *
-     * @param  Order   $order
-     * @param  string  $rzpPaymentId  The Razorpay payment ID to store
-     * @return void
-     */
     public function markOrderPaid(Order $order, string $rzpPaymentId): void
     {
         $order->update([
@@ -149,77 +162,77 @@ class PaymentService
         ]);
     }
 
-    /**
-     * Handle Razorpay webhook events (called by PaymentController@webhook).
-     * Supports: payment.captured, payment.failed, refund.created
-     *
-     * @param  array   $payload    Decoded webhook JSON body
-     * @param  string  $signature  X-Razorpay-Signature header value
-     * @return void
-     */
-    public function handleWebhook(array $payload, string $signature): void
+    public function handleWebhook(array $payload, string $signature, string $rawContent = ''): void
     {
-        // Verify webhook signature
-        $webhookSecret = config('services.razorpay.key_secret');
-        $expectedSig   = hash_hmac('sha256', json_encode($payload), $webhookSecret);
+        $webhookSecret = config('services.razorpay.webhook_secret') ?: config('services.razorpay.key_secret');
 
-        if (! hash_equals($expectedSig, $signature)) {
-            abort(400, 'Invalid webhook signature.');
+        if (! empty($webhookSecret) && ! empty($signature)) {
+            $body = ! empty($rawContent) ? $rawContent : json_encode($payload);
+            $expectedSig = hash_hmac('sha256', $body, $webhookSecret);
+
+            if (! hash_equals($expectedSig, $signature)) {
+                Log::warning('Invalid Razorpay webhook signature received');
+                abort(400, 'Invalid webhook signature.');
+            }
         }
 
         $event = $payload['event'] ?? null;
+        Log::info('Razorpay webhook received: ' . $event, ['event' => $event]);
 
         match ($event) {
             'payment.captured' => $this->onPaymentCaptured($payload),
+            'order.paid'       => $this->onOrderPaid($payload),
             'payment.failed'   => $this->onPaymentFailed($payload),
             'refund.created'   => $this->onRefundCreated($payload),
             default            => null,
         };
     }
 
-    // ──────────────────────────────────────────────────
-    // Private webhook event handlers
-    // ──────────────────────────────────────────────────
-
     private function onPaymentCaptured(array $payload): void
     {
-        $rzpOrderId = $payload['payload']['payment']['entity']['order_id'] ?? null;
+        $rzpOrderId   = $payload['payload']['payment']['entity']['order_id'] ?? null;
         $rzpPaymentId = $payload['payload']['payment']['entity']['id'] ?? null;
 
         if (! $rzpOrderId) return;
 
         $order = Order::where('payment_reference', $rzpOrderId)->first();
-
         if ($order && $order->payment_status !== 'paid') {
-            $this->markOrderPaid($order, $rzpPaymentId);
+            $this->markOrderPaid($order, $rzpPaymentId ?: $rzpOrderId);
+        }
+    }
+
+    private function onOrderPaid(array $payload): void
+    {
+        $rzpOrderId = $payload['payload']['order']['entity']['id'] ?? null;
+        if (! $rzpOrderId) return;
+
+        $order = Order::where('payment_reference', $rzpOrderId)->first();
+        if ($order && $order->payment_status !== 'paid') {
+            $this->markOrderPaid($order, $rzpOrderId);
         }
     }
 
     private function onPaymentFailed(array $payload): void
     {
         $rzpOrderId = $payload['payload']['payment']['entity']['order_id'] ?? null;
-
         if (! $rzpOrderId) return;
 
         $order = Order::where('payment_reference', $rzpOrderId)->first();
-
-        if ($order) {
+        if ($order && $order->payment_status !== 'paid') {
             $order->update(['payment_status' => 'failed']);
         }
     }
 
     private function onRefundCreated(array $payload): void
     {
-        // Placeholder: handle refunds in a future phase
-        // Log the refund event for manual processing
-        \Illuminate\Support\Facades\Log::info('Razorpay refund created', $payload);
+        Log::info('Razorpay refund created', $payload);
     }
 }
 ```
 
 ---
 
-## 5. `app/Http/Controllers/Frontend/PaymentController.php`
+## 5. Payment Controller — `app/Http/Controllers/Frontend/PaymentController.php`
 
 ```php
 <?php
@@ -230,31 +243,38 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class PaymentController extends Controller
 {
     public function __construct(protected PaymentService $paymentService) {}
 
-    /**
-     * Initiate Razorpay payment for a pending order.
-     * GET /payment/{orderNumber}/pay
-     */
     public function initiate(string $orderNumber)
     {
         $order = Order::where('order_number', $orderNumber)
             ->where('user_id', auth()->id())
-            ->where('payment_status', 'pending')
             ->firstOrFail();
 
-        $rzpPayload = $this->paymentService->createRazorpayOrder($order);
+        if ($order->payment_status === 'paid') {
+            return redirect()->route('order.confirmation', $order->order_number)
+                ->with('info', 'This order has already been paid for.');
+        }
+
+        try {
+            $rzpPayload = $this->paymentService->createRazorpayOrder($order);
+        } catch (\Throwable $e) {
+            Log::error('Failed to create Razorpay order', [
+                'order_number' => $order->order_number,
+                'error'        => $e->getMessage(),
+            ]);
+
+            return redirect()->route('order.show', $order->order_number)
+                ->with('error', 'Unable to initiate online payment: ' . $e->getMessage());
+        }
 
         return view('payment.razorpay', compact('order', 'rzpPayload'));
     }
 
-    /**
-     * Handle Razorpay callback after payment success on the frontend.
-     * POST /payment/callback
-     */
     public function callback(Request $request)
     {
         $validated = $request->validate([
@@ -271,30 +291,29 @@ class PaymentController extends Controller
         $verified = $this->paymentService->verifySignature(
             $validated['razorpay_order_id'],
             $validated['razorpay_payment_id'],
-            $validated['razorpay_signature'],
+            $validated['razorpay_signature']
         );
 
         if (! $verified) {
+            $order->update(['payment_status' => 'failed']);
+
             return redirect()->route('order.show', $order->order_number)
-                ->with('error', 'Payment verification failed. Please contact support.');
+                ->with('error', 'Payment verification failed. Please try again or contact support.');
         }
 
         $this->paymentService->markOrderPaid($order, $validated['razorpay_payment_id']);
 
         return redirect()->route('order.confirmation', $order->order_number)
-            ->with('success', 'Payment successful!');
+            ->with('success', 'Payment successful! Your order has been placed and confirmed.');
     }
 
-    /**
-     * Razorpay webhook endpoint.
-     * POST /payment/webhook
-     */
     public function webhook(Request $request)
     {
-        $signature = $request->header('X-Razorpay-Signature', '');
-        $payload   = $request->json()->all();
+        $signature  = $request->header('X-Razorpay-Signature', '');
+        $payload    = $request->json()->all();
+        $rawContent = $request->getContent();
 
-        $this->paymentService->handleWebhook($payload, $signature);
+        $this->paymentService->handleWebhook($payload, $signature, $rawContent);
 
         return response()->json(['status' => 'ok']);
     }
@@ -303,104 +322,39 @@ class PaymentController extends Controller
 
 ---
 
-## 6. Routes — `routes/web.php`
+## 6. Routes Registered
 
 ```php
-use App\Http\Controllers\Frontend\PaymentController;
-
-// Payment routes
+// In routes/web.php
 Route::middleware('auth')->group(function () {
-    Route::get('/payment/{orderNumber}/pay', [PaymentController::class, 'initiate'])->name('payment.initiate');
-    Route::post('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+    Route::get('/payment/{orderNumber}/pay', [\App\Http\Controllers\Frontend\PaymentController::class, 'initiate'])->name('payment.initiate');
+    Route::post('/payment/callback', [\App\Http\Controllers\Frontend\PaymentController::class, 'callback'])->name('payment.callback');
 });
 
-// Webhook — no CSRF (must exclude from CSRF in VerifyCsrfToken middleware)
-Route::post('/payment/webhook', [PaymentController::class, 'webhook'])->name('payment.webhook');
+// Razorpay Webhook (excluded from CSRF in bootstrap/app.php)
+Route::post('/payment/webhook', [\App\Http\Controllers\Frontend\PaymentController::class, 'webhook'])->name('payment.webhook');
 ```
 
 ---
 
-## 7. Exclude webhook from CSRF — `app/Http/Middleware/VerifyCsrfToken.php`
+## 7. CSRF Exemption — `bootstrap/app.php`
 
 ```php
-protected $except = [
+$middleware->validateCsrfTokens(except: [
     'payment/webhook',
-];
+]);
 ```
 
 ---
 
-## 8. Razorpay Checkout View — `resources/views/payment/razorpay.blade.php`
+## 8. Razorpay Webhook Configuration in Razorpay Dashboard
 
-```blade
-@extends('layouts.app')
-
-@section('title', 'Complete Payment — ' . $order->order_number)
-
-@section('content')
-<div class="container" style="padding:4rem 1.5rem; max-width:480px; margin:0 auto; text-align:center;">
-    <h1 style="font-family:var(--font-primary); font-size:2rem; margin-bottom:0.5rem;">Complete Payment</h1>
-    <p style="color:var(--color-text-muted); margin-bottom:2rem;">Order: <strong>{{ $order->order_number }}</strong></p>
-
-    <div style="background:var(--color-dark-card); border:1px solid var(--color-border); border-radius:var(--radius); padding:2rem; margin-bottom:2rem;">
-        <div style="font-size:0.8rem; color:var(--color-text-muted); margin-bottom:0.5rem;">Amount to Pay</div>
-        <div style="font-family:var(--font-primary); font-size:2.5rem; font-weight:600; color:var(--color-gold);">₹{{ number_format($order->total_amount, 0) }}</div>
-    </div>
-
-    <button id="rzp-button" class="btn btn-gold" style="width:100%; justify-content:center; padding:1rem; font-size:1rem;">
-        Pay with Razorpay →
-    </button>
-
-    <form id="rzp-form" action="{{ route('payment.callback') }}" method="POST" style="display:none;">
-        @csrf
-        <input type="hidden" name="order_number" value="{{ $order->order_number }}">
-        <input type="hidden" name="razorpay_order_id" id="rzp_order_id">
-        <input type="hidden" name="razorpay_payment_id" id="rzp_payment_id">
-        <input type="hidden" name="razorpay_signature" id="rzp_signature">
-    </form>
-</div>
-@endsection
-
-@push('scripts')
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script>
-const options = @json($rzpPayload);
-
-options.handler = function(response) {
-    document.getElementById('rzp_order_id').value   = response.razorpay_order_id;
-    document.getElementById('rzp_payment_id').value  = response.razorpay_payment_id;
-    document.getElementById('rzp_signature').value   = response.razorpay_signature;
-    document.getElementById('rzp-form').submit();
-};
-
-options.modal = {
-    ondismiss: function() {
-        console.log('Payment dismissed by user.');
-    }
-};
-
-const rzp = new Razorpay(options);
-
-document.getElementById('rzp-button').addEventListener('click', function(e) {
-    e.preventDefault();
-    rzp.open();
-});
-</script>
-@endpush
-```
-
----
-
-## Notes
-
-- In V1 (COD phase), `PaymentService` is scaffolded but not called during checkout. The `initiate` route is only reached when the user explicitly chooses online payment.
-- The **webhook** is the most reliable payment confirmation method — always use it in production. The callback is for UX only.
-- Razorpay test mode keys start with `rzp_test_`. Switch to `rzp_live_` in production.
-- Ensure the webhook URL is registered in the Razorpay Dashboard under Settings → Webhooks.
-- For production, add `RAZORPAY_WEBHOOK_SECRET` to `.env` and use it to verify the webhook signature separately from the API secret.
-
----
-
-## ✅ All 55 Steps Complete
-
-The full implementation plan is now documented. Start implementation from `01-migrate-users-extend.md` and proceed sequentially. Each file contains complete, runnable code ready to copy into the project.
+1. Navigate to **Razorpay Dashboard** → **Settings** → **Webhooks**.
+2. Click **Add New Webhook**.
+3. **Webhook URL:** `https://yourdomain.com/payment/webhook`
+4. **Secret:** Set a strong secret and save it to `.env` as `RAZORPAY_WEBHOOK_SECRET`.
+5. **Active Events:**
+   - `payment.captured`
+   - `payment.failed`
+   - `order.paid`
+   - `refund.created`

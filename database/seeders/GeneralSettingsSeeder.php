@@ -209,7 +209,7 @@ class GeneralSettingsSeeder extends Seeder
                     <p>PINORA ("we", "our", or "us") is dedicated to upholding the highest standards of data privacy and customer trust. This policy describes how we collect, store, and protect your information when you visit or make a purchase from our website.</p>
 
                     <h3>Information We Collect</h3>
-                    <p>When you purchase from Pinora, we collect essential order processing details including your name, shipping address, contact phone number, and email address. Payment credentials (card numbers, UPI IDs) are processed through RBI-approved, PCI-DSS Level 1 compliant gateways (Stripe, Razorpay) and are never stored on our servers.</p>
+                    <p>When you purchase from Pinora, we collect essential order processing details including your name, shipping address, contact phone number, and email address. Payment credentials (card numbers, UPI IDs) are processed through RBI-approved, PCI-DSS Level 1 compliant gateways (Razorpay) and are never stored on our servers.</p>
 
                     <h3>How We Use Your Information</h3>
                     <ul>
