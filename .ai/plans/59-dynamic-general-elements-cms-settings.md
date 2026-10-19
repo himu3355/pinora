@@ -120,5 +120,8 @@ php artisan db:seed --class=GeneralSettingsSeeder --force
   - Tailwind CSS applies a Preflight reset which strips all default HTML styles from headings (no margins, base font-weight, same size), lists (`list-style: none`, 0 padding), and paragraphs.
   - Installed the official `@tailwindcss/typography` plugin with `@plugin "@tailwindcss/typography";` in `resources/css/app.css`.
   - Rather than maintaining fragile manual tag-by-tag CSS rules that break whenever new HTML tags are introduced, all rich text formatting is fully delegated to the official `@tailwindcss/typography` plugin using `prose max-w-none`.
-  - Brand accents are applied non-destructively through standard Tailwind typography modifier classes (`prose-headings:font-primary`, `prose-headings:text-[#062E23]`, `prose-a:text-[#083B2B]`, etc.), ensuring full support for all existing and future HTML tags (e.g., nested lists, tables, blockquotes, code blocks, embeds, figures) without custom CSS maintenance.
+- **Alpine.js Reactive Components (FAQ Filters & Hero Sliders)**:
+  - Installed `alpinejs` via npm and imported/started it in `resources/js/app.js` (`import Alpine from 'alpinejs'; window.Alpine = Alpine; Alpine.start();`).
+  - Added `[x-cloak] { display: none !important; }` in `resources/css/app.css` to prevent flash of unstyled content.
+  - On the FAQ page (`resources/views/pages/faq.blade.php`), category filter buttons dynamically switch active question groups via `activeCategory` state and toggle accordion expansion via `openFaq`, with smooth expand/collapse transitions.
 

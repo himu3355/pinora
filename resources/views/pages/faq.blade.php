@@ -26,15 +26,15 @@
     @if(isset($faqs) && $faqs->isNotEmpty())
         <div class="flex items-center gap-2 overflow-x-auto pb-4 mb-8 scrollbar-none">
             <button type="button" 
-                    @click="activeCategory = 'all'" 
-                    :class="activeCategory === 'all' ? 'bg-[#083B2B] text-white border-[#083B2B]' : 'bg-white text-[#142E25] border-[#EAE5DC] hover:border-[#083B2B]'" 
+                    @click="activeCategory = 'all'; openFaq = null" 
+                    :class="activeCategory === 'all' ? 'bg-[#083B2B] text-white border-[#083B2B] shadow-sm' : 'bg-white text-[#142E25] border-[#EAE5DC] hover:border-[#083B2B]'" 
                     class="px-4 py-2 rounded-full border text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer">
                 All Questions
             </button>
             @foreach($faqs->keys() as $category)
                 <button type="button" 
-                        @click="activeCategory = '{{ $category }}'" 
-                        :class="activeCategory === '{{ $category }}' ? 'bg-[#083B2B] text-white border-[#083B2B]' : 'bg-white text-[#142E25] border-[#EAE5DC] hover:border-[#083B2B]'" 
+                        @click="activeCategory = '{{ addslashes($category) }}'; openFaq = null" 
+                        :class="activeCategory === '{{ addslashes($category) }}' ? 'bg-[#083B2B] text-white border-[#083B2B] shadow-sm' : 'bg-white text-[#142E25] border-[#EAE5DC] hover:border-[#083B2B]'" 
                         class="px-4 py-2 rounded-full border text-xs font-semibold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer">
                     {{ $category }}
                 </button>
@@ -45,7 +45,11 @@
         <div class="space-y-4">
             @php $faqIndex = 0; @endphp
             @foreach($faqs as $category => $items)
-                <div x-show="activeCategory === 'all' || activeCategory === '{{ $category }}'" class="space-y-3">
+                <div x-show="activeCategory === 'all' || activeCategory === '{{ addslashes($category) }}'" 
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-1"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="space-y-3">
                     @if($loop->count > 1)
                         <h2 x-show="activeCategory === 'all'" class="text-xs uppercase tracking-widest font-bold text-[#8E9E98] pt-4 mb-1">
                             {{ $category }}

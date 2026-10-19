@@ -1,3 +1,7 @@
+import Alpine from 'alpinejs';
+
+window.Alpine = Alpine;
+Alpine.start();
 
 function getUrl(path) {
     if (!path) return '';
