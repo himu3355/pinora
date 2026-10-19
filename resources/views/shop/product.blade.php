@@ -263,6 +263,10 @@
             @endif
 
             {{-- Desktop Buy Box Action Buttons (Hidden on mobile sticky, visible on md+) --}}
+            @php
+                $currentStock = $selectedVariant ? $selectedVariant->stock_quantity : $product->stock_quantity;
+                $isOutOfStock = $currentStock <= 0;
+            @endphp
             <div class="hidden md:flex flex-col gap-3 mb-8">
                 <form action="{{ route('cart.add') }}" method="POST" id="desktop-add-cart-form" class="grid grid-cols-2 gap-3">
                     @csrf
@@ -271,13 +275,13 @@
                     <input type="hidden" name="quantity" value="1">
                     
                     {{-- Add to Cart --}}
-                    <button type="submit" id="desktop-add-btn" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#083B2B] hover:bg-[#062E23] text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="submit" id="desktop-add-btn" {{ $isOutOfStock ? 'disabled' : '' }} class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#083B2B] hover:bg-[#062E23] text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                        <span id="desktop-add-btn-text">{{ ($selectedVariant && $selectedVariant->stock_quantity <= 0) ? 'Out of Stock' : 'Add to Cart' }}</span>
+                        <span id="desktop-add-btn-text">{{ $isOutOfStock ? 'Out of Stock' : 'Add to Cart' }}</span>
                     </button>
 
                     {{-- Buy Now --}}
-                    <button type="button" onclick="triggerBuyNow('desktop-add-cart-form')" id="desktop-buy-btn" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] font-bold rounded-xl text-sm transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="button" onclick="triggerBuyNow('desktop-add-cart-form')" id="desktop-buy-btn" {{ $isOutOfStock ? 'disabled' : '' }} class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] font-bold rounded-xl text-sm transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" /></svg>
                         <span>Buy Now</span>
                     </button>
@@ -622,14 +626,14 @@
             <input type="hidden" name="product_id" value="{{ $product->id }}">
             <input type="hidden" name="variant_id" id="mobile-variant-id" value="{{ $selectedVariant?->id ?? '' }}">
             <input type="hidden" name="quantity" value="1">
-            <button type="submit" id="mobile-add-btn" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#083B2B] text-white text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" id="mobile-add-btn" {{ $isOutOfStock ? 'disabled' : '' }} class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#083B2B] text-white text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                <span id="mobile-add-btn-text">{{ ($selectedVariant && $selectedVariant->stock_quantity <= 0) ? 'Out of Stock' : 'Add to Cart' }}</span>
+                <span id="mobile-add-btn-text">{{ $isOutOfStock ? 'Out of Stock' : 'Add to Cart' }}</span>
             </button>
         </form>
 
         {{-- Buy Now --}}
-        <button type="button" onclick="triggerBuyNow('mobile-add-cart-form')" id="mobile-buy-btn" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] text-xs font-bold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="button" onclick="triggerBuyNow('mobile-add-cart-form')" id="mobile-buy-btn" {{ $isOutOfStock ? 'disabled' : '' }} class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] text-xs font-bold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" /></svg>
             <span>Buy Now</span>
         </button>

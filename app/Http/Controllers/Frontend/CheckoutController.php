@@ -25,9 +25,25 @@ class CheckoutController extends Controller
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
+        $totals = $this->cart->totalsWithPricing($this->pricing);
+
+        // Pre-validate stock before allowing checkout
+        foreach ($totals['items'] as $item) {
+            $product = \App\Models\Product::find($item['product_id']);
+            $variant = !empty($item['variant_id']) ? \App\Models\ProductVariant::find($item['variant_id']) : null;
+            $stockHolder = $variant ?? $product;
+
+            if (! $stockHolder || $stockHolder->stock_quantity < $item['quantity']) {
+                $available = $stockHolder ? $stockHolder->stock_quantity : 0;
+                return redirect()->route('cart.index')->with(
+                    'error',
+                    "Insufficient stock for '{$item['product_name']}'. Only {$available} available in stock. Please adjust your cart quantity."
+                );
+            }
+        }
+
         $user      = auth()->user();
         $addresses = $user->addresses()->orderByDesc('is_default')->get();
-        $totals    = $this->cart->totalsWithPricing($this->pricing);
 
         // Default to IGST preview until address is selected
         $gstBreakdown = [
@@ -80,12 +96,19 @@ class CheckoutController extends Controller
             ]));
         }
 
-        // Place order via OrderService
-        $order = $this->orderService->placeOrder(
-            user:          $user,
-            address:       $address,
-            paymentMethod: $validated['payment_method'],
-        );
+        try {
+            // Place order via OrderService
+            $order = $this->orderService->placeOrder(
+                user:          $user,
+                address:       $address,
+                paymentMethod: $validated['payment_method'],
+            );
+        } catch (\RuntimeException $e) {
+            return redirect()->route('cart.index')->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            report($e);
+            return redirect()->route('checkout.index')->with('error', 'Unable to process checkout: ' . $e->getMessage());
+        }
 
         $this->cart->clear();
 

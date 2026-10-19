@@ -44,10 +44,36 @@ class CartController extends Controller
             'quantity'   => 'nullable|integer|min:1|max:50',
         ]);
 
+        $qty = $validated['quantity'] ?? 1;
+        $product = \App\Models\Product::findOrFail($validated['product_id']);
+        $variant = !empty($validated['variant_id']) ? \App\Models\ProductVariant::find($validated['variant_id']) : null;
+        $stockHolder = $variant ?? $product;
+
+        // Check stock availability
+        $cartKey = $product->id . '-' . ($variant?->id ?? '0');
+        $existingCart = $this->cart->items();
+        $currentInCart = isset($existingCart[$cartKey]) ? $existingCart[$cartKey]['quantity'] : 0;
+        $totalRequested = $currentInCart + $qty;
+
+        if ($stockHolder->stock_quantity < $totalRequested) {
+            $msg = $stockHolder->stock_quantity <= 0
+                ? "Sorry, '{$product->name}' is currently out of stock."
+                : "Cannot add {$qty} more item(s). Only {$stockHolder->stock_quantity} available in stock.";
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $msg,
+                ], 422);
+            }
+
+            return back()->with('error', $msg);
+        }
+
         $this->cart->add(
             $validated['product_id'],
             $validated['variant_id'] ?? null,
-            $validated['quantity']   ?? 1
+            $qty
         );
 
         if ($request->expectsJson()) {
