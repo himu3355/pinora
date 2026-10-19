@@ -34,18 +34,18 @@
                     size="sm"
                     icon="heroicon-m-document-duplicate"
                     wire:click="copyPreviousRates"
-                    tooltip="Copy rates from previous records into empty inputs (0 API requests)"
+                    tooltip="Copy rates from previous records into empty inputs"
                 >
                     Pre-fill Latest Rates
                 </x-filament::button>
 
                 <x-filament::button
                     type="button"
-                    color="{{ $this->hasSyncedToday() ? 'warning' : 'success' }}"
+                    color="{{ $this->hasSyncedToday() ? 'gray' : 'success' }}"
                     size="sm"
                     icon="heroicon-m-arrow-path"
                     wire:click="syncFromGoldApi"
-                    tooltip="{{ $this->hasSyncedToday() ? 'Rates already synced today. Click to force re-sync.' : 'Fetch current market bullion rates from GoldAPI (uses 3 requests)' }}"
+                    tooltip="{{ $this->hasSyncedToday() ? 'Re-sync live market rates (cached 60s to protect IP from blocking)' : 'Fetch live market bullion rates from Gold-API.com (cached 60s to protect IP from blocking)' }}"
                 >
                     {{ $this->hasSyncedToday() ? 'Re-sync API' : 'Sync Live API' }}
                 </x-filament::button>

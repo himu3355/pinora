@@ -16,7 +16,7 @@ Create a Filament 5 Resource for daily metal rate entry. Includes a custom List 
 | `app/Filament/Resources/MetalRates/Pages/CreateMetalRate.php` | Create page for single rate entry |
 | `app/Filament/Resources/MetalRates/Pages/EditMetalRate.php` | Edit page |
 | `app/Filament/Widgets/TodayMetalRatesWidget.php` | Header stats panel widget (Gold 24K/22K/18K/14K, Silver 999/925, Platinum 950) |
-| `app/Services/MetalRateSyncService.php` | Syncs metal rates from GoldAPI on-demand |
+| `app/Services/MetalRateSyncService.php` | Syncs metal rates from Gold-API.com on-demand (Free & Unlimited, zero API keys required) |
 
 ---
 
@@ -442,24 +442,58 @@ class EditMetalRate extends EditRecord
 namespace App\Services;
 
 use App\Models\MetalRate;
-use App\Models\Setting;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class MetalRateSyncService
 {
+    /**
+     * Standard conversion factor: 1 Troy Ounce = 31.1034768 Grams.
+     */
+    public const TROY_OUNCE_IN_GRAMS = 31.1034768;
+
+    /**
+     * Cache duration in seconds.
+     * Gold-API.com requests at least 30s cache to avoid IP blocking. We use 60s for safety margin.
+     */
+    public const CACHE_TTL_SECONDS = 60;
+
     protected ?string $lastError = null;
+    protected bool $servedFromCache = false;
 
     public function getLastError(): ?string
     {
         return $this->lastError;
     }
 
-    protected function createClient(string $apiKey)
+    public function wasServedFromCache(): bool
+    {
+        return $this->servedFromCache;
+    }
+
+    public function hasSyncedToday(): bool
+    {
+        return MetalRate::whereDate('effective_date', today())
+            ->where('notes', 'like', 'Synced via Gold-API.com%')
+            ->exists();
+    }
+
+    public function getLastSyncedAt(): ?string
+    {
+        $record = MetalRate::whereDate('effective_date', today())
+            ->where('notes', 'like', 'Synced via Gold-API.com%')
+            ->latest('updated_at')
+            ->first();
+
+        return $record?->updated_at?->toDateTimeString();
+    }
+
+    protected function createClient()
     {
         $client = Http::withHeaders([
-            'x-access-token' => $apiKey,
-            'Content-Type'   => 'application/json',
+            'User-Agent' => 'PinoraJewellery/1.0 (https://pinora.in; metal-rate-sync)',
+            'Accept'     => 'application/json',
         ])->timeout(12);
 
         if (app()->environment('local') || config('app.debug')) {
@@ -469,13 +503,23 @@ class MetalRateSyncService
         return $client;
     }
 
-    public function sync(?string $overrideApiKey = null, bool $force = false): bool
+    /**
+     * Fetch daily metal rates from Gold-API.com and store them.
+     * IP Anti-Spam Protection:
+     * - 60-second price caching per symbol (exceeds Gold-API 30s recommendation)
+     * - Atomic cache lock (gold_api_sync_lock) prevents concurrent bursts
+     * - 250ms spacing between symbol requests
+     */
+    public function sync(): bool
     {
-        // Enforces once-daily syncing to stay within 100 requests/month quota (3 requests/day = 90/month)
-        // Checks hasSyncedToday(); blocks duplicate syncs unless $force = true
-        // Fetches key from override, Setting::get('goldapi_key'), config('services.goldapi.key'), or env('GOLDAPI_KEY')
-        // Syncs XAU (Gold 24K, 22K, 18K, 14K), XAG (Silver 999, 925), and XPT (Platinum 950) in INR
-        // Records sync timestamp in settings and flushes rate cache
+        // 1. Fetches XAU (Gold in INR) from https://api.gold-api.com/price/XAU/INR (or 60s cache)
+        //    Converts Troy Ounce to Gram: rate24K = ozPrice / 31.1034768
+        //    Auto-computes 24K, 22K (91.67%), 18K (75%), 14K (58.33%)
+        // 2. Fetches XAG (Silver in INR) from https://api.gold-api.com/price/XAG/INR (or 60s cache)
+        //    Auto-computes Silver 999 and 925 (92.5%)
+        // 3. Fetches XPT (Platinum in INR) from https://api.gold-api.com/price/XPT/INR (or 60s cache)
+        //    Auto-computes Platinum 950
+        // 4. Updates or creates metal_rates records for today's date and flushes cache
     }
 }
 ```

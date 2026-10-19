@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Setting;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -11,6 +12,7 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\HtmlString;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -220,16 +222,28 @@ class ManageSettings extends Page implements HasForms
                         ]),
                     ]),
 
-                // Tab 7: Live Bullion API (GoldAPI.io)
-                Tab::make('Bullion API (GoldAPI)')
-                    ->icon('heroicon-o-key')
+                // Tab 7: Live Bullion API (Gold-API.com)
+                Tab::make('Bullion API (Gold-API.com)')
+                    ->icon('heroicon-o-chart-bar')
                     ->schema([
-                        TextInput::make('goldapi_key')
-                            ->label('GoldAPI Access Token')
-                            ->password()
-                            ->revealable()
-                            ->placeholder('e.g. goldapi-xxxxxxxxxxxx-io')
-                            ->helperText('Token from https://www.goldapi.io to fetch live daily market bullion rates in INR. Can also be set via GOLDAPI_KEY in .env.'),
+                        Placeholder::make('gold_api_provider_info')
+                            ->label('Active Bullion Provider')
+                            ->content(new HtmlString('
+                                <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200 text-sm space-y-2">
+                                    <div class="font-semibold flex items-center gap-2 text-base text-emerald-700 dark:text-emerald-300">
+                                        <span>Gold-API.com (Free &amp; Unlimited Real-Time Rates)</span>
+                                    </div>
+                                    <p class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                                        Live bullion market rates for <strong>Gold (24K, 22K, 18K, 14K)</strong>, <strong>Silver (999, 925)</strong>, and <strong>Platinum (950)</strong> are fetched directly via <strong>https://api.gold-api.com</strong> with <strong>zero authentication tokens required</strong> and no monthly request limits.
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        International Troy Ounce prices are automatically converted to grams (1 oz = 31.1034768 g) in Indian Rupees (INR) per gram.
+                                    </p>
+                                    <div class="pt-2 border-t border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                        <span>🛡️ <strong>IP Protection Active:</strong> Live prices are cached for 60 seconds (exceeds Gold-API 30s requirement) with atomic lock and request pacing to prevent your IP from ever being blocked.</span>
+                                    </div>
+                                </div>
+                            ')),
                     ]),
 
             ]),

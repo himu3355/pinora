@@ -26,65 +26,25 @@ class ListMetalRates extends ListRecords
                 ->label('Add Single Rate')
                 ->outlined(),
             Action::make('sync')
-                ->label(fn (MetalRateSyncService $sync) => $sync->hasSyncedToday() ? 'Re-sync GoldAPI' : 'Sync Daily Rates')
+                ->label(fn (MetalRateSyncService $sync) => $sync->hasSyncedToday() ? 'Re-sync Live API' : 'Sync Daily Rates')
                 ->icon('heroicon-o-arrow-path')
-                ->color(fn (MetalRateSyncService $sync) => $sync->hasSyncedToday() ? 'warning' : 'success')
-                ->modalHeading(fn (MetalRateSyncService $sync) => $sync->hasSyncedToday() ? 'Today\'s Rates Already Synced' : 'Sync Live Rates from GoldAPI')
-                ->modalDescription(function (MetalRateSyncService $sync) {
-                    if ($sync->hasSyncedToday()) {
-                        $time = $sync->getLastSyncedAt() ? \Carbon\Carbon::parse($sync->getLastSyncedAt())->format('h:i A') : 'earlier today';
-                        return "⚠️ Rates have already been synced today at {$time}. GoldAPI free tier is strictly limited to 100 requests/month (3 requests per sync = 90 requests/month). Re-syncing today will consume an extra 3 requests from your quota.";
-                    }
-                    return 'Fetches today\'s live market bullion rates and auto-calculates alloy rates (uses 3 requests).';
-                })
-                ->modalSubmitActionLabel(fn (MetalRateSyncService $sync) => $sync->hasSyncedToday() ? 'Confirm & Force Sync' : 'Sync Now')
-                ->form(function (MetalRateSyncService $sync) {
-                    $fields = [
-                        \Filament\Forms\Components\TextInput::make('token')
-                            ->label('GoldAPI Access Token')
-                            ->default(fn () => \App\Models\Setting::get('goldapi_key') ?: config('services.goldapi.key') ?: env('GOLDAPI_KEY'))
-                            ->password()
-                            ->revealable()
-                            ->placeholder('goldapi-xxxxxxxxxxxx-io')
-                            ->helperText('Free token from https://www.goldapi.io. Saved automatically once entered.'),
-                    ];
+                ->color(fn (MetalRateSyncService $sync) => $sync->hasSyncedToday() ? 'gray' : 'success')
+                ->tooltip('Fetch today\'s live market bullion rates from Gold-API.com (Free & Unlimited)')
+                ->action(function (MetalRateSyncService $syncService) {
+                    if ($syncService->sync()) {
+                        $body = $syncService->wasServedFromCache()
+                            ? 'Rates refreshed using cached live market prices (anti-spam protection active to prevent IP blocking).'
+                            : 'Live bullion market rates fetched from Gold-API.com and updated.';
 
-                    if ($sync->hasSyncedToday()) {
-                        $fields[] = \Filament\Forms\Components\Toggle::make('force')
-                            ->label('I understand: Force duplicate re-sync today (uses 3 extra requests)')
-                            ->default(false)
-                            ->required()
-                            ->helperText('Enable this toggle to confirm you want to proceed with a second sync today.');
-                    }
-
-                    return $fields;
-                })
-                ->action(function (array $data, MetalRateSyncService $syncService) {
-                    if ($syncService->hasSyncedToday() && empty($data['force'])) {
-                        Notification::make()
-                            ->title('Sync Cancelled')
-                            ->body('Duplicate sync skipped to protect your 100 requests/month quota.')
-                            ->info()
-                            ->send();
-                        return;
-                    }
-
-                    if (!empty($data['token'])) {
-                        \App\Models\Setting::set('goldapi_key', trim($data['token']));
-                    }
-
-                    $force = (bool) ($data['force'] ?? false);
-
-                    if ($syncService->sync($data['token'] ?? null, force: $force)) {
                         Notification::make()
                             ->title('Rates Synced Successfully')
-                            ->body('Market rates fetched from GoldAPI and updated.')
+                            ->body($body)
                             ->success()
                             ->send();
                     } else {
                         Notification::make()
                             ->title('Sync Blocked / Failed')
-                            ->body($syncService->getLastError() ?: 'Could not sync rates from GoldAPI.')
+                            ->body($syncService->getLastError() ?: 'Could not sync rates from Gold-API.com.')
                             ->danger()
                             ->send();
                     }
