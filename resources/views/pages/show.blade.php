@@ -34,7 +34,7 @@
         </div>
     @endif
 
-    <div class="prose max-w-none text-[#142E25] prose-headings:font-primary prose-headings:text-[#062E23] prose-p:leading-relaxed prose-a:text-[#083B2B] prose-a:underline hover:prose-a:text-[#C59B27] prose-li:text-[#2D453E]">
+    <div class="prose max-w-none text-[#142E25] prose-headings:font-primary prose-headings:text-[#062E23] prose-a:text-[#083B2B] hover:prose-a:text-[#C59B27]">
         {!! $page->content !!}
     </div>
 </div>

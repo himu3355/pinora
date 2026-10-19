@@ -116,3 +116,9 @@ php artisan db:seed --class=GeneralSettingsSeeder --force
   - Public website assets (sliders, logos, CMS banners, category images) must be stored on the `public` disk (`->disk('public')`). If saved to `local` (private) storage, Laravel's `storage.local` route intercepts direct URL requests and denies unsigned access with `403 Forbidden`.
   - For Filament's FilePond previewer to load existing images without being stuck on "Loading...", `APP_URL` in `.env` must match the actual host and port being browsed (e.g., `http://localhost:8000`). Mismatched ports (such as port 80 in `.env` vs port 8000 in browser) trigger CORS cross-origin blocks on FilePond's AJAX fetch requests.
   - An NTFS directory junction (`mklink /J public\storage storage\app\public`) provides permanent direct static file serving on Windows environments.
+- **Frontend Rich Content & CMS Typography (Tailwind v4 Preflight Override)**:
+  - Tailwind CSS applies a Preflight reset which strips all default HTML styles from headings (no margins, base font-weight, same size), lists (`list-style: none`, 0 padding), and paragraphs.
+  - Installed the official `@tailwindcss/typography` plugin with `@plugin "@tailwindcss/typography";` in `resources/css/app.css`.
+  - Rather than maintaining fragile manual tag-by-tag CSS rules that break whenever new HTML tags are introduced, all rich text formatting is fully delegated to the official `@tailwindcss/typography` plugin using `prose max-w-none`.
+  - Brand accents are applied non-destructively through standard Tailwind typography modifier classes (`prose-headings:font-primary`, `prose-headings:text-[#062E23]`, `prose-a:text-[#083B2B]`, etc.), ensuring full support for all existing and future HTML tags (e.g., nested lists, tables, blockquotes, code blocks, embeds, figures) without custom CSS maintenance.
+

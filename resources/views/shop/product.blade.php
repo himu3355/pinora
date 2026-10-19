@@ -35,6 +35,15 @@
                     'alt' => $product->name,
                 ];
             }
+
+            $certBadges = $product->certification_badges;
+            if (empty($certBadges)) {
+                $certBadges = [
+                    'bis_hallmark'        => \App\Models\Product::AVAILABLE_CERTIFICATIONS['bis_hallmark'],
+                    'certified_jewellery' => \App\Models\Product::AVAILABLE_CERTIFICATIONS['certified_jewellery'],
+                    'lifetime_exchange'   => \App\Models\Product::AVAILABLE_CERTIFICATIONS['lifetime_exchange'],
+                ];
+            }
         @endphp
 
         {{-- ======================================================== --}}
@@ -114,6 +123,13 @@
                 <span class="text-xs sm:text-sm font-semibold text-[#142E25]">4.8</span>
                 <span class="text-xs text-[#8E9E98]">(126 reviews)</span>
             </div>
+
+            {{-- Short Description --}}
+            @if(!empty($product->short_description))
+            <p class="text-xs sm:text-sm text-[#60706A] leading-relaxed mb-3">
+                {{ $product->short_description }}
+            </p>
+            @endif
 
             {{-- Price Display --}}
             @php
@@ -281,7 +297,35 @@
             {{-- ==================================================== --}}
             <div class="space-y-2 border-t border-[#EAE5DC] pt-4">
                 
-                {{-- Accordion 1: Product Details --}}
+                {{-- Accordion 1: Description --}}
+                <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
+                    <button type="button" 
+                            onclick="toggleAccordion('acc-description')" 
+                            class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left cursor-pointer hover:bg-[#FAF8F5] transition-colors">
+                        <div class="flex items-center gap-2.5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-[#083B2B]">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+                            </svg>
+                            <span class="text-xs sm:text-sm font-bold text-[#142E25]">Description</span>
+                        </div>
+                        <svg id="icon-acc-description" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div id="content-acc-description" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
+                        @if(!empty($product->description))
+                            <div class="prose prose-sm max-w-none text-[#60706A] prose-p:my-1.5 prose-headings:text-[#142E25]">
+                                {!! $product->description !!}
+                            </div>
+                        @elseif(!empty($product->short_description))
+                            <p>{{ $product->short_description }}</p>
+                        @else
+                            <p>Handcrafted fine jewellery by Pinora master artisans, celebrating authentic craftsmanship and certified precious metals.</p>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Accordion 2: Product Details --}}
                 <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
                     <button type="button" 
                             onclick="toggleAccordion('acc-details')" 
@@ -316,6 +360,16 @@
                                 <td class="py-1.5 text-right font-semibold text-emerald-700" id="details-net-weight">{{ number_format(max(0, (float)($selectedVariant?->weight_grams ?? $product->weight_grams) - (float)$product->loss), 3) }} g</td>
                             </tr>
                             @endif
+                            @if(!empty($product->stone_type))
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Stone</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">
+                                    {{ $product->stone_type }}
+                                    @if($product->stone_weight_carats) · {{ $product->stone_weight_carats }} ct @endif
+                                    @if($product->stone_quality) · {{ $product->stone_quality }} @endif
+                                </td>
+                            </tr>
+                            @endif
                             <tr class="border-b border-[#FAF8F5]">
                                 <td class="py-1.5 font-medium text-gray-500">Pricing Type</td>
                                 <td class="py-1.5 text-right font-semibold text-[#142E25]">
@@ -338,106 +392,83 @@
                     </div>
                 </div>
 
-                {{-- Accordion 2: Price Breakup --}}
+                {{-- Accordion 3: Certification & Authenticity --}}
                 <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
                     <button type="button" 
-                            onclick="toggleAccordion('acc-price')" 
+                            onclick="toggleAccordion('acc-certification')" 
                             class="w-full flex items-center justify-between p-3.5 sm:p-4 text-left cursor-pointer hover:bg-[#FAF8F5] transition-colors">
                         <div class="flex items-center gap-2.5">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-4 h-4 text-[#083B2B]">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z" />
                             </svg>
-                            <span class="text-xs sm:text-sm font-bold text-[#142E25]">Price Breakup</span>
+                            <span class="text-xs sm:text-sm font-bold text-[#142E25]">Certification & Authenticity</span>
                         </div>
-                        <svg id="icon-acc-price" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200">
+                        <svg id="icon-acc-certification" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-gray-500 transition-transform duration-200">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                         </svg>
                     </button>
-                    <div id="content-acc-price" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
-                        <table class="w-full text-xs">
-                            @if (($pricing['product_type'] ?? $product->product_type) === 'mrp_fixed')
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">Fixed MRP</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-final-amount">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
-                                </tr>
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">Taxes</td>
-                                    <td class="py-1.5 text-right font-semibold text-emerald-700">Included in MRP</td>
-                                </tr>
-                            @elseif (($pricing['product_type'] ?? $product->product_type) === 'mrp_linked')
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">
-                                        Batch Metal Value ({{ number_format($pricing['net_weight'] ?? $product->weight_grams, 3) }}g)
-                                    </td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-metal-cost">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
-                                </tr>
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">Batch Labour ({{ $pricing['making_charges_rate'] ?? 0 }}%)</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-making-charges">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
-                                </tr>
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">Total Batch Cost</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['batch_cost'] ?? 0, 2) }}</td>
-                                </tr>
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">Batch Quantity</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ $pricing['mrp_pieces'] ?? $product->mrp_pieces ?? 1 }} pcs</td>
-                                </tr>
-                            @else
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">
-                                        Metal Value ({{ ucfirst($pricing['metal_type'] ?? $product->metal_type) }} {{ $pricing['purity'] ?? $product->purity }} · {{ number_format($pricing['net_weight'] ?? $product->weight_grams, 3) }}g)
-                                    </td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-metal-cost">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
-                                </tr>
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">
-                                        Labour / Making Charges
-                                        @if (($pricing['making_charges_type'] ?? '') === 'percentage')
-                                            ({{ $pricing['making_charges_rate'] }}%)
-                                        @elseif (($pricing['making_charges_type'] ?? '') === 'per_gram')
-                                            (₹{{ $pricing['making_charges_rate'] }}/g)
-                                        @endif
-                                    </td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-making-charges">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
-                                </tr>
-                                @if (($pricing['discount_percent'] ?? 0) > 0)
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-green-600">Discount ({{ $pricing['discount_percent'] }}%)</td>
-                                    <td class="py-1.5 text-right font-semibold text-green-600">− ₹{{ number_format($pricing['discount_amount'] ?? 0, 2) }}</td>
-                                </tr>
-                                @endif
-                                <tr class="border-b border-[#FAF8F5]">
-                                    <td class="py-1.5 font-medium text-gray-500">GST ({{ $pricing['gst_rate'] ?? 3 }}% HSN 7113)</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-gst">+ ₹{{ number_format($pricing['gst_amount'] ?? 0, 2) }}</td>
-                                </tr>
-                            @endif
-                            <tr class="pt-2">
-                                <td class="py-2 font-bold text-[#142E25]">
-                                    @if (in_array(($pricing['product_type'] ?? $product->product_type), ['mrp_fixed', 'mrp_linked']))
-                                        Final Consumer MRP
+                    <div id="content-acc-certification" class="p-4 pt-1 border-t border-[#EAE5DC] text-xs text-[#60706A] leading-relaxed hidden">
+                        <table class="w-full text-xs mb-3">
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Hallmarking Standard</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">
+                                    @if($product->metal_type === 'gold')
+                                        {{ $product->purity }} BIS Hallmarked Gold
+                                    @elseif($product->metal_type === 'silver')
+                                        {{ $product->purity }} Certified Sterling Silver
                                     @else
-                                        Final Amount (incl. GST)
+                                        100% Certified Authentic
                                     @endif
                                 </td>
-                                <td class="py-2 text-right font-bold text-sm text-[#083B2B]" id="breakup-final-amount">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
                             </tr>
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Certification Type</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]">
+                                    @if($product->certification_type && $product->certification_type !== 'none')
+                                        {{ strtoupper($product->certification_type) }} Certified
+                                    @elseif($product->metal_type === 'gold')
+                                        BIS Hallmark Certified
+                                    @else
+                                        Pinora Authenticity Certificate
+                                    @endif
+                                </td>
+                            </tr>
+                            @if($product->certification_number)
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Certificate ID</td>
+                                <td class="py-1.5 text-right font-semibold text-[#083B2B] font-mono tracking-wider">{{ $product->certification_number }}</td>
+                            </tr>
+                            @endif
+                            @if($product->certification_file)
+                            <tr class="border-b border-[#FAF8F5]">
+                                <td class="py-1.5 font-medium text-gray-500">Certificate Document</td>
+                                <td class="py-1.5 text-right font-semibold">
+                                    <a href="{{ asset('storage/' . $product->certification_file) }}" target="_blank" class="text-[#083B2B] hover:underline inline-flex items-center gap-1 font-semibold">
+                                        <span>View Document</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endif
                         </table>
-                        @if (!empty($pricing['metal_rate_effective_date']))
-                            <div class="mt-2.5 pt-2 border-t border-[#FAF8F5] text-[0.72rem] text-gray-500 flex items-center justify-between">
-                                <span class="flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5 text-emerald-600">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    Metal Rate Effective Date:
-                                </span>
-                                <span class="font-semibold text-[#142E25]">{{ $pricing['metal_rate_effective_date'] }}</span>
+
+                        {{-- Certification Badges --}}
+                        <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-[#FAF8F5]">
+                            @foreach($certBadges as $badge)
+                            <div class="flex items-center gap-2 p-2 rounded-lg bg-[#FAF8F5] border border-[#EAE5DC]">
+                                @if(file_exists(public_path($badge['logo'])))
+                                    <img src="{{ asset($badge['logo']) }}" alt="{{ $badge['label'] }}" class="w-6 h-6 object-contain shrink-0">
+                                @else
+                                    <span class="text-sm">🏅</span>
+                                @endif
+                                <span class="text-[0.7rem] font-semibold text-[#142E25] leading-tight">{{ $badge['label'] }}</span>
                             </div>
-                        @endif
+                            @endforeach
+                        </div>
                     </div>
                 </div>
 
-                {{-- Accordion 3: Shipping & Returns --}}
+                {{-- Accordion 4: Shipping & Returns --}}
                 <div class="border border-[#EAE5DC] rounded-xl bg-white overflow-hidden">
                     <button type="button" 
                             onclick="toggleAccordion('acc-shipping')" 
@@ -465,6 +496,83 @@
 
         </div>
 
+    </div>
+
+    {{-- ======================================================== --}}
+    {{-- PRODUCT DESCRIPTION & CERTIFICATION SECTION              --}}
+    {{-- ======================================================== --}}
+    <div class="mt-14 pt-10 border-t border-[#EAE5DC]">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+            
+            {{-- Left: Full Story & Description --}}
+            <div class="lg:col-span-7 bg-white border border-[#EAE5DC] rounded-2xl p-6 sm:p-8 shadow-xs">
+                <div class="flex items-center gap-3 mb-5 pb-3 border-b border-[#FAF8F5]">
+                    <div class="w-9 h-9 rounded-full bg-[#083B2B]/10 flex items-center justify-center text-[#083B2B]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 class="font-primary text-xl sm:text-2xl font-bold text-[#142E25]">The Product Story</h2>
+                        <span class="text-xs text-[#8E9E98]">Artisanal craftsmanship & design details</span>
+                    </div>
+                </div>
+
+                @if(!empty($product->description))
+                    <div class="prose prose-sm sm:prose max-w-none text-[#60706A] leading-relaxed prose-headings:text-[#142E25] prose-strong:text-[#142E25]">
+                        {!! $product->description !!}
+                    </div>
+                @else
+                    <p class="text-xs sm:text-sm text-[#60706A] leading-relaxed mb-4">
+                        {{ $product->short_description ?? 'Designed and crafted with perfection by Pinora master craftsmen. Each piece represents our dedication to timeless beauty, ethical sourcing, and uncompromising gold purity.' }}
+                    </p>
+                @endif
+            </div>
+
+            {{-- Right: Certification & Quality Promise --}}
+            <div class="lg:col-span-5 bg-[#FAF8F5] border border-[#EAE5DC] rounded-2xl p-6 sm:p-8 shadow-xs">
+                <div class="flex items-center gap-3 mb-5 pb-3 border-b border-[#EAE5DC]">
+                    <div class="w-9 h-9 rounded-full bg-[#E0C475]/30 flex items-center justify-center text-[#A37F18]">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                            <path fill-rule="evenodd" d="M12.516 2.17a.75.75 0 00-1.032 0 11.209 11.209 0 01-7.877 3.08.75.75 0 00-.722.515A12.74 12.74 0 002.25 9.75c0 5.942 4.064 10.933 9.563 12.348a.749.749 0 00.374 0c5.499-1.415 9.563-6.406 9.563-12.348 0-1.39-.223-2.73-.635-3.985a.75.75 0 00-.722-.516l-.143.001c-2.996 0-5.717-1.17-7.734-3.08zm3.094 8.016a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="font-primary text-xl font-bold text-[#142E25]">Certified Authenticity</h3>
+                        <span class="text-xs text-[#8E9E98]">Guaranteed Hallmarked Jewellery</span>
+                    </div>
+                </div>
+
+                <p class="text-xs sm:text-sm text-[#60706A] mb-5 leading-relaxed">
+                    Every piece created at Pinora is accompanied by official hallmark certifications verifying precious metal purity and gemstone genuineness.
+                </p>
+
+                {{-- Badges Stack --}}
+                <div class="space-y-3 mb-5">
+                    @foreach($certBadges as $badge)
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white border border-[#EAE5DC]">
+                        @if(file_exists(public_path($badge['logo'])))
+                            <img src="{{ asset($badge['logo']) }}" alt="{{ $badge['label'] }}" class="w-8 h-8 object-contain shrink-0">
+                        @else
+                            <div class="w-8 h-8 rounded-full bg-[#083B2B]/10 flex items-center justify-center text-[#083B2B] text-base shrink-0">🏅</div>
+                        @endif
+                        <div>
+                            <span class="block text-xs font-bold text-[#142E25]">{{ $badge['label'] }}</span>
+                            <span class="block text-[0.7rem] text-[#8E9E98]">Guaranteed genuine by Pinora</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+
+                @if($product->certification_number)
+                <div class="p-3 bg-white border border-[#EAE5DC] rounded-xl flex items-center justify-between text-xs">
+                    <span class="text-gray-500 font-medium">Certificate ID</span>
+                    <span class="font-bold text-[#083B2B] font-mono tracking-wider">{{ $product->certification_number }}</span>
+                </div>
+                @endif
+            </div>
+
+        </div>
     </div>
 
     {{-- ======================================================== --}}
@@ -636,7 +744,7 @@ function selectProductVariant(variantId) {
     const netWeight = document.getElementById('details-net-weight');
     if (netWeight) netWeight.textContent = data.formatted_net_weight;
 
-    // 6. Update price breakup table
+    // 6. Update price breakup table if present
     if (data.pricing) {
         const metalCost = document.getElementById('breakup-metal-cost');
         if (metalCost) metalCost.textContent = '₹' + data.pricing.formatted_metal_cost;
