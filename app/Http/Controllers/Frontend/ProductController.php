@@ -25,8 +25,45 @@ class ProductController extends Controller
             ])
             ->firstOrFail();
 
-        $pricing     = $this->pricing->calculate($product);
-        $metalRate   = $pricing['metal_rate'] ?? null;
+        $variants = $product->variants;
+        $variantData = [];
+        $selectedVariant = null;
+
+        if ($variants->isNotEmpty()) {
+            foreach ($variants as $v) {
+                $vPricing = $this->pricing->calculate($product, $v->id);
+                $grossWeight = (float) ($v->weight_grams ?? $product->weight_grams ?? 0);
+                $loss = (float) ($product->loss ?? 0);
+                $netWeight = max(0, $grossWeight - $loss);
+
+                $variantData[$v->id] = [
+                    'id'               => $v->id,
+                    'name'             => $v->name,
+                    'sku'              => $v->sku ?? $product->sku,
+                    'stock_quantity'   => (int) $v->stock_quantity,
+                    'gross_weight'     => number_format($grossWeight, 3),
+                    'loss'             => number_format($loss, 3),
+                    'net_weight'       => number_format($netWeight, 3),
+                    'final_price'      => (float) ($vPricing['final_price'] ?? 0),
+                    'formatted_price'  => '₹' . number_format($vPricing['final_price'] ?? 0, 0),
+                    'metal_cost'       => (float) ($vPricing['metal_cost'] ?? 0),
+                    'formatted_metal'  => '₹' . number_format($vPricing['metal_cost'] ?? 0, 2),
+                    'making_charges'   => (float) ($vPricing['making_charges'] ?? 0),
+                    'formatted_making' => '₹' . number_format($vPricing['making_charges'] ?? 0, 2),
+                    'gst_amount'       => (float) ($vPricing['gst_amount'] ?? 0),
+                    'formatted_gst'    => '₹' . number_format($vPricing['gst_amount'] ?? 0, 2),
+                ];
+            }
+
+            $selectedVariant = $variants->firstWhere('stock_quantity', '>', 0) ?? $variants->first();
+            if ($selectedVariant) {
+                $pricing = $this->pricing->calculate($product, $selectedVariant->id);
+            }
+        } else {
+            $pricing = $this->pricing->calculate($product);
+        }
+
+        $metalRate = $pricing['metal_rate'] ?? null;
 
         $relatedProducts = Product::active()
             ->where('id', '!=', $product->id)
@@ -54,7 +91,7 @@ class ProductController extends Controller
                 && !Review::where('product_id', $product->id)->where('user_id', auth()->id())->exists();
         }
 
-        return view('shop.product', compact('product', 'pricing', 'metalRate', 'relatedProducts', 'canReview'));
+        return view('shop.product', compact('product', 'pricing', 'metalRate', 'relatedProducts', 'canReview', 'variants', 'variantData', 'selectedVariant'));
     }
 
     public function storeReview(Request $request, int $id)

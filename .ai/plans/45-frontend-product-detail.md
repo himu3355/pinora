@@ -53,8 +53,48 @@ class ProductController extends Controller
             ])
             ->firstOrFail();
 
-        $pricing     = $this->pricing->calculate($product);
-        $metalRate   = $pricing['metal_rate'] ?? null;
+        $variants = $product->variants;
+        $variantData = [];
+        $selectedVariant = null;
+
+        if ($variants->isNotEmpty()) {
+            foreach ($variants as $v) {
+                $vPricing = $this->pricing->calculate($product, $v->id);
+                $grossWeight = (float) ($v->weight_grams ?? $product->weight_grams ?? 0);
+                $loss = (float) ($product->loss ?? 0);
+                $netWeight = max(0, $grossWeight - $loss);
+
+                $variantData[$v->id] = [
+                    'id'               => $v->id,
+                    'name'             => $v->name,
+                    'sku'              => $v->sku ?? $product->sku,
+                    'stock_quantity'   => (int) $v->stock_quantity,
+                    'gross_weight'     => number_format($grossWeight, 3),
+                    'loss'             => number_format($loss, 3),
+                    'net_weight'       => number_format($netWeight, 3),
+                    'formatted_gross_weight' => number_format($grossWeight, 3) . ' g',
+                    'formatted_net_weight'   => number_format($netWeight, 3) . ' g',
+                    'in_stock'         => $v->stock_quantity > 0,
+                    'pricing'          => [
+                        'metal_cost'        => $vPricing['metal_cost'] ?? 0,
+                        'making_charges'    => $vPricing['making_charges'] ?? 0,
+                        'gst_amount'        => $vPricing['gst_amount'] ?? 0,
+                        'final_price'       => $vPricing['final_price'] ?? 0,
+                        'formatted_metal_cost'     => number_format($vPricing['metal_cost'] ?? 0, 0),
+                        'formatted_making_charges' => number_format($vPricing['making_charges'] ?? 0, 0),
+                        'formatted_gst_amount'     => number_format($vPricing['gst_amount'] ?? 0, 0),
+                        'formatted_final_price'    => number_format($vPricing['final_price'] ?? 0, 0),
+                    ],
+                ];
+            }
+
+            $selectedVariant = $variants->firstWhere('stock_quantity', '>', 0) ?? $variants->first();
+            $pricing = $this->pricing->calculate($product, $selectedVariant?->id);
+        } else {
+            $pricing = $this->pricing->calculate($product);
+        }
+
+        $metalRate = $pricing['metal_rate'] ?? null;
 
         $relatedProducts = Product::active()
             ->where('id', '!=', $product->id)
@@ -82,7 +122,7 @@ class ProductController extends Controller
                 && !Review::where('product_id', $product->id)->where('user_id', auth()->id())->exists();
         }
 
-        return view('shop.product', compact('product', 'pricing', 'metalRate', 'relatedProducts', 'canReview'));
+        return view('shop.product', compact('product', 'variants', 'variantData', 'selectedVariant', 'pricing', 'metalRate', 'relatedProducts', 'canReview'));
     }
 
     public function storeReview(Request $request, int $id)
@@ -480,8 +520,11 @@ function selectVariant(btn, variantId) {
 
 ## Notes
 
-- The price breakdown array from `PricingService::calculate($product)` must return keys: `metal_rate`, `weight`, `metal_cost`, `making_charges`, `gst_amount`, `final_price`, `original_price`, `discount_amount`.
+- The price breakdown array from `PricingService::calculate($product, $variantId)` returns: `metal_rate`, `weight`, `metal_cost`, `making_charges`, `gst_amount`, `final_price`, `original_price`, `discount_amount`.
+- Variant selectors are completely dynamic:
+  - If a product has variants (`$variants->isNotEmpty()`), all active variants are listed with their name, weight in grams, and stock availability.
+  - Selecting a variant automatically updates the desktop & mobile price tags, gross weight, net weight, price breakup table (metal cost, making charges, GST), stock hint, and hidden `variant_id` inputs in both desktop and mobile forms.
+  - If a product has no variants, clean certified metal & purity specifications are shown with no placeholder buttons.
+- The "Buy Now" button uses asynchronous submission to `route('cart.add')` and seamlessly redirects the user directly to `route('checkout.index')`.
 - `canReview` is true only if: (a) user is logged in, (b) has a delivered order item for this product, (c) hasn't reviewed it before.
-- Tab switching is pure vanilla JS — no dependencies.
 - `route('cart.add')` and `route('wishlist.toggle')` are defined in Steps 46 and 49 respectively.
-- Variant buttons use inline JS to update the hidden form field `form_variant_id` before form submission.

@@ -120,22 +120,29 @@
                 $finalPrice = $pricing['final_price'] ?? ($product->base_price > 0 ? $product->base_price : 8450);
             @endphp
             <div class="mb-3">
-                <div class="text-2xl sm:text-3xl font-bold text-[#142E25]">
+                <div class="text-2xl sm:text-3xl font-bold text-[#142E25]" id="product-price-display">
                     ₹{{ number_format($finalPrice, 0) }}
                 </div>
                 <p class="text-[0.75rem] text-[#60706A]">Inclusive of all taxes</p>
             </div>
 
-            {{-- 22K BIS Hallmarked Gold Badge (Matching Image 2) --}}
-            <div class="inline-flex items-center gap-2 mb-5 text-[#083B2B] text-xs font-semibold">
-                {{-- Hallmark triangle symbol --}}
+            {{-- Dynamic BIS Hallmarked / Certified Badge --}}
+            <div class="inline-flex items-center gap-2 mb-4 text-[#083B2B] text-xs font-semibold">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#083B2B]" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 2L1 21h22L12 2zm0 4.5l7 12.5H5l7-12.5z"/>
                 </svg>
-                <span>22K BIS Hallmarked Gold</span>
+                <span>
+                    @if($product->metal_type === 'gold')
+                        {{ $product->purity }} BIS Hallmarked Gold
+                    @elseif($product->metal_type === 'silver')
+                        {{ $product->purity }} Certified Sterling Silver
+                    @else
+                        100% Certified {{ ucfirst($product->metal_type ?? 'Jewellery') }}
+                    @endif
+                </span>
             </div>
 
-            {{-- Delivery Checker Box (Matching Image 2) --}}
+            {{-- Delivery Checker Box --}}
             <div class="bg-white border border-[#EAE5DC] rounded-xl p-3 sm:p-4 mb-5 shadow-xs">
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3">
@@ -168,63 +175,96 @@
                 </div>
             </div>
 
-            {{-- Gold Purity Selector (Image 2) --}}
+            {{-- Certified Metal & Purity Details --}}
             <div class="mb-5">
-                <label class="block text-xs font-bold text-[#142E25] mb-2">Gold Purity</label>
-                <div class="flex items-center gap-3">
-                    <button type="button" 
-                            onclick="selectPurity(this, '22K')" 
-                            class="purity-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border-2 border-[#083B2B] bg-[#083B2B]/5 text-[#083B2B] cursor-pointer transition-all">
-                        22K Gold
-                    </button>
-                    <button type="button" 
-                            onclick="selectPurity(this, '18K')" 
-                            class="purity-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-[#EAE5DC] bg-white text-[#60706A] hover:border-[#083B2B] cursor-pointer transition-all">
-                        18K Gold
-                    </button>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-bold text-[#142E25]">Metal & Certified Purity</label>
+                    <span class="text-[0.7rem] text-emerald-700 font-semibold flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        Guaranteed Authentic
+                    </span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold border-2 border-[#083B2B] bg-[#083B2B]/5 text-[#083B2B]">
+                        <span class="w-2 h-2 rounded-full bg-[#C59B27]"></span>
+                        <span>{{ $product->purity }} {{ ucfirst($product->metal_type) }}</span>
+                        @if($product->metal_type === 'gold' && $product->purity === '24K')
+                            <span class="text-[0.7rem] font-normal text-[#60706A]">(99.9% Pure Gold)</span>
+                        @elseif($product->metal_type === 'gold' && $product->purity === '22K')
+                            <span class="text-[0.7rem] font-normal text-[#60706A]">(91.6% Pure Gold)</span>
+                        @elseif($product->metal_type === 'gold' && $product->purity === '18K')
+                            <span class="text-[0.7rem] font-normal text-[#60706A]">(75.0% Gold)</span>
+                        @elseif($product->metal_type === 'gold' && $product->purity === '14K')
+                            <span class="text-[0.7rem] font-normal text-[#60706A]">(58.5% Gold)</span>
+                        @elseif($product->metal_type === 'silver' && $product->purity === '925')
+                            <span class="text-[0.7rem] font-normal text-[#60706A]">(92.5% Sterling Silver)</span>
+                        @elseif($product->metal_type === 'silver' && $product->purity === '999')
+                            <span class="text-[0.7rem] font-normal text-[#60706A]">(99.9% Pure Silver)</span>
+                        @endif
+                    </div>
                 </div>
             </div>
 
-            {{-- Choose Size Selector (Image 2) --}}
+            {{-- Dynamic Variant / Size Selector (Only when product has real variants) --}}
+            @if($variants->isNotEmpty())
             <div class="mb-6">
-                <label class="block text-xs font-bold text-[#142E25] mb-2">Choose Size</label>
-                <div class="flex items-center gap-3">
-                    <button type="button" 
-                            onclick="selectSize(this, 'Small')" 
-                            class="size-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-[#EAE5DC] bg-white text-[#60706A] hover:border-[#083B2B] cursor-pointer transition-all">
-                        Small
-                    </button>
-                    <button type="button" 
-                            onclick="selectSize(this, 'Medium')" 
-                            class="size-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border-2 border-[#083B2B] bg-[#083B2B]/5 text-[#083B2B] cursor-pointer transition-all">
-                        Medium
-                    </button>
-                    <button type="button" 
-                            onclick="selectSize(this, 'Large')" 
-                            class="size-btn px-4 py-2 rounded-xl text-xs sm:text-sm font-medium border border-[#EAE5DC] bg-white text-[#60706A] hover:border-[#083B2B] cursor-pointer transition-all">
-                        Large
-                    </button>
+                <div class="flex items-center justify-between mb-2">
+                    <label class="block text-xs font-bold text-[#142E25]">
+                        @if(stripos($product->category?->name ?? '', 'ring') !== false || stripos($product->name, 'ring') !== false)
+                            Choose Ring Size
+                        @elseif(stripos($product->category?->name ?? '', 'bangle') !== false || stripos($product->name, 'bangle') !== false)
+                            Choose Bangle Size
+                        @else
+                            Available Sizes / Options
+                        @endif
+                    </label>
+                    <span id="variant-stock-hint" class="text-[0.7rem]">
+                        @if($selectedVariant && $selectedVariant->stock_quantity > 0)
+                            <span class="text-emerald-700 font-medium">✓ In Stock</span>
+                        @else
+                            <span class="text-red-500 font-semibold">Out of Stock</span>
+                        @endif
+                    </span>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    @foreach($variants as $variant)
+                        @php
+                            $isSelected = $selectedVariant && $selectedVariant->id === $variant->id;
+                            $inStock = $variant->stock_quantity > 0;
+                        @endphp
+                        <button type="button" 
+                                onclick="selectProductVariant({{ $variant->id }})" 
+                                data-variant-id="{{ $variant->id }}"
+                                class="variant-btn px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 {{ $isSelected ? 'border-2 border-[#083B2B] bg-[#083B2B]/5 text-[#083B2B] font-semibold shadow-xs' : 'border border-[#EAE5DC] bg-white text-[#60706A] font-medium hover:border-[#083B2B]' }} {{ !$inStock ? 'opacity-50 cursor-not-allowed' : '' }}">
+                            <span>{{ $variant->name }}</span>
+                            @if($variant->weight_grams)
+                                <span class="text-[0.7rem] opacity-75">({{ number_format((float) $variant->weight_grams, 2) }}g)</span>
+                            @endif
+                        </button>
+                    @endforeach
                 </div>
             </div>
+            @endif
 
             {{-- Desktop Buy Box Action Buttons (Hidden on mobile sticky, visible on md+) --}}
             <div class="hidden md:flex flex-col gap-3 mb-8">
                 <form action="{{ route('cart.add') }}" method="POST" id="desktop-add-cart-form" class="grid grid-cols-2 gap-3">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <input type="hidden" name="variant_id" id="desktop-variant-id" value="{{ $selectedVariant?->id ?? '' }}">
                     <input type="hidden" name="quantity" value="1">
                     
                     {{-- Add to Cart --}}
-                    <button type="submit" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#083B2B] hover:bg-[#062E23] text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer">
+                    <button type="submit" id="desktop-add-btn" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#083B2B] hover:bg-[#062E23] text-white rounded-xl text-sm font-semibold transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                        <span>Add to Cart</span>
+                        <span id="desktop-add-btn-text">{{ ($selectedVariant && $selectedVariant->stock_quantity <= 0) ? 'Out of Stock' : 'Add to Cart' }}</span>
                     </button>
 
                     {{-- Buy Now --}}
-                    <a href="{{ route('checkout.index') }}" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] font-bold rounded-xl text-sm transition-all shadow-md cursor-pointer">
+                    <button type="button" onclick="triggerBuyNow('desktop-add-cart-form')" id="desktop-buy-btn" class="flex items-center justify-center gap-2 py-3.5 px-4 bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] font-bold rounded-xl text-sm transition-all shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" /></svg>
                         <span>Buy Now</span>
-                    </a>
+                    </button>
                 </form>
 
                 {{-- Wishlist button desktop --}}
@@ -264,7 +304,7 @@
                             </tr>
                             <tr class="border-b border-[#FAF8F5]">
                                 <td class="py-1.5 font-medium text-gray-500">Gross Weight</td>
-                                <td class="py-1.5 text-right font-semibold text-[#142E25]">{{ number_format((float) ($product->weight_grams ?? 0), 3) }} g</td>
+                                <td class="py-1.5 text-right font-semibold text-[#142E25]" id="details-gross-weight">{{ number_format((float) ($selectedVariant?->weight_grams ?? $product->weight_grams ?? 0), 3) }} g</td>
                             </tr>
                             @if ((float) ($product->loss ?? 0) > 0)
                             <tr class="border-b border-[#FAF8F5]">
@@ -273,7 +313,7 @@
                             </tr>
                             <tr class="border-b border-[#FAF8F5]">
                                 <td class="py-1.5 font-medium text-emerald-700">Net Weight</td>
-                                <td class="py-1.5 text-right font-semibold text-emerald-700">{{ number_format(max(0, (float)$product->weight_grams - (float)$product->loss), 3) }} g</td>
+                                <td class="py-1.5 text-right font-semibold text-emerald-700" id="details-net-weight">{{ number_format(max(0, (float)($selectedVariant?->weight_grams ?? $product->weight_grams) - (float)$product->loss), 3) }} g</td>
                             </tr>
                             @endif
                             <tr class="border-b border-[#FAF8F5]">
@@ -318,7 +358,7 @@
                             @if (($pricing['product_type'] ?? $product->product_type) === 'mrp_fixed')
                                 <tr class="border-b border-[#FAF8F5]">
                                     <td class="py-1.5 font-medium text-gray-500">Fixed MRP</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-final-amount">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
                                 </tr>
                                 <tr class="border-b border-[#FAF8F5]">
                                     <td class="py-1.5 font-medium text-gray-500">Taxes</td>
@@ -329,11 +369,11 @@
                                     <td class="py-1.5 font-medium text-gray-500">
                                         Batch Metal Value ({{ number_format($pricing['net_weight'] ?? $product->weight_grams, 3) }}g)
                                     </td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-metal-cost">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
                                 </tr>
                                 <tr class="border-b border-[#FAF8F5]">
                                     <td class="py-1.5 font-medium text-gray-500">Batch Labour ({{ $pricing['making_charges_rate'] ?? 0 }}%)</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-making-charges">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
                                 </tr>
                                 <tr class="border-b border-[#FAF8F5]">
                                     <td class="py-1.5 font-medium text-gray-500">Total Batch Cost</td>
@@ -348,7 +388,7 @@
                                     <td class="py-1.5 font-medium text-gray-500">
                                         Metal Value ({{ ucfirst($pricing['metal_type'] ?? $product->metal_type) }} {{ $pricing['purity'] ?? $product->purity }} · {{ number_format($pricing['net_weight'] ?? $product->weight_grams, 3) }}g)
                                     </td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-metal-cost">₹{{ number_format($pricing['metal_cost'] ?? 0, 2) }}</td>
                                 </tr>
                                 <tr class="border-b border-[#FAF8F5]">
                                     <td class="py-1.5 font-medium text-gray-500">
@@ -359,7 +399,7 @@
                                             (₹{{ $pricing['making_charges_rate'] }}/g)
                                         @endif
                                     </td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-making-charges">₹{{ number_format($pricing['making_charges'] ?? 0, 2) }}</td>
                                 </tr>
                                 @if (($pricing['discount_percent'] ?? 0) > 0)
                                 <tr class="border-b border-[#FAF8F5]">
@@ -369,7 +409,7 @@
                                 @endif
                                 <tr class="border-b border-[#FAF8F5]">
                                     <td class="py-1.5 font-medium text-gray-500">GST ({{ $pricing['gst_rate'] ?? 3 }}% HSN 7113)</td>
-                                    <td class="py-1.5 text-right font-semibold text-[#142E25]">+ ₹{{ number_format($pricing['gst_amount'] ?? 0, 2) }}</td>
+                                    <td class="py-1.5 text-right font-semibold text-[#142E25]" id="breakup-gst">+ ₹{{ number_format($pricing['gst_amount'] ?? 0, 2) }}</td>
                                 </tr>
                             @endif
                             <tr class="pt-2">
@@ -380,7 +420,7 @@
                                         Final Amount (incl. GST)
                                     @endif
                                 </td>
-                                <td class="py-2 text-right font-bold text-sm text-[#083B2B]">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
+                                <td class="py-2 text-right font-bold text-sm text-[#083B2B]" id="breakup-final-amount">₹{{ number_format($pricing['final_price'] ?? $finalPrice, 2) }}</td>
                             </tr>
                         </table>
                         @if (!empty($pricing['metal_rate_effective_date']))
@@ -460,8 +500,8 @@
     
     {{-- Price Info Left --}}
     <div class="flex-shrink-0">
-        <div class="text-base sm:text-lg font-bold text-[#142E25] leading-tight">
-            ₹{{ number_format($finalPrice, 0) }}
+        <div id="mobile-price-display" class="text-base sm:text-lg font-bold text-[#142E25] leading-tight">
+            ₹{{ number_format($pricing['final_price'], 0) }}
         </div>
         <span class="text-[0.62rem] text-[#8E9E98] block">Inclusive of all taxes</span>
     </div>
@@ -472,18 +512,19 @@
         <form action="{{ route('cart.add') }}" method="POST" id="mobile-add-cart-form" class="m-0">
             @csrf
             <input type="hidden" name="product_id" value="{{ $product->id }}">
+            <input type="hidden" name="variant_id" id="mobile-variant-id" value="{{ $selectedVariant?->id ?? '' }}">
             <input type="hidden" name="quantity" value="1">
-            <button type="submit" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#083B2B] text-white text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform">
+            <button type="submit" id="mobile-add-btn" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#083B2B] text-white text-xs font-semibold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                <span>Add to Cart</span>
+                <span id="mobile-add-btn-text">{{ ($selectedVariant && $selectedVariant->stock_quantity <= 0) ? 'Out of Stock' : 'Add to Cart' }}</span>
             </button>
         </form>
 
         {{-- Buy Now --}}
-        <a href="{{ route('checkout.index') }}" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] text-xs font-bold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform">
+        <button type="button" onclick="triggerBuyNow('mobile-add-cart-form')" id="mobile-buy-btn" class="flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-lg bg-[#E0C475] hover:bg-[#C59B27] text-[#083B2B] text-xs font-bold cursor-pointer shadow-xs whitespace-nowrap active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clip-rule="evenodd" /></svg>
             <span>Buy Now</span>
-        </a>
+        </button>
     </div>
 
 </div>
@@ -493,6 +534,7 @@
 @push('scripts')
 <script>
 const pdpImages = @json(array_column($galleryImages, 'url'));
+const variantsData = @json($variantData);
 let currentPdpIdx = 0;
 
 function setPdpImage(idx, src) {
@@ -526,22 +568,121 @@ function prevPdpImage() {
     setPdpImage(currentPdpIdx, pdpImages[currentPdpIdx]);
 }
 
-function selectPurity(btn, purity) {
-    document.querySelectorAll('.purity-btn').forEach(b => {
-        b.classList.remove('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
-        b.classList.add('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+function selectProductVariant(variantId) {
+    const data = variantsData[variantId];
+    if (!data) return;
+
+    // 1. Highlight selected button
+    document.querySelectorAll('.variant-btn').forEach(btn => {
+        const id = parseInt(btn.getAttribute('data-variant-id'));
+        if (id === variantId) {
+            btn.classList.remove('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+            btn.classList.add('border-2', 'border-[#083B2B]', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold', 'shadow-xs');
+        } else {
+            btn.classList.remove('border-2', 'border-[#083B2B]', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold', 'shadow-xs');
+            btn.classList.add('border', 'border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
+        }
     });
-    btn.classList.remove('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
-    btn.classList.add('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
+
+    // 2. Update hidden form inputs
+    const desktopVarInput = document.getElementById('desktop-variant-id');
+    if (desktopVarInput) desktopVarInput.value = variantId;
+
+    const mobileVarInput = document.getElementById('mobile-variant-id');
+    if (mobileVarInput) mobileVarInput.value = variantId;
+
+    // 3. Update price display
+    const priceDisplay = document.getElementById('product-price-display');
+    if (priceDisplay && data.pricing) {
+        priceDisplay.innerHTML = '₹' + data.pricing.formatted_final_price;
+    }
+
+    const mobilePriceDisplay = document.getElementById('mobile-price-display');
+    if (mobilePriceDisplay && data.pricing) {
+        mobilePriceDisplay.innerHTML = '₹' + data.pricing.formatted_final_price;
+    }
+
+    // 4. Update stock hint and button availability
+    const stockHint = document.getElementById('variant-stock-hint');
+    const desktopAddBtn = document.getElementById('desktop-add-btn');
+    const desktopAddBtnText = document.getElementById('desktop-add-btn-text');
+    const desktopBuyBtn = document.getElementById('desktop-buy-btn');
+    const mobileAddBtn = document.getElementById('mobile-add-btn');
+    const mobileAddBtnText = document.getElementById('mobile-add-btn-text');
+    const mobileBuyBtn = document.getElementById('mobile-buy-btn');
+
+    if (data.in_stock) {
+        if (stockHint) stockHint.innerHTML = '<span class="text-emerald-700 font-medium">✓ In Stock</span>';
+        if (desktopAddBtn) desktopAddBtn.disabled = false;
+        if (desktopAddBtnText) desktopAddBtnText.textContent = 'Add to Cart';
+        if (desktopBuyBtn) desktopBuyBtn.disabled = false;
+        if (mobileAddBtn) mobileAddBtn.disabled = false;
+        if (mobileAddBtnText) mobileAddBtnText.textContent = 'Add to Cart';
+        if (mobileBuyBtn) mobileBuyBtn.disabled = false;
+    } else {
+        if (stockHint) stockHint.innerHTML = '<span class="text-red-500 font-semibold">Out of Stock</span>';
+        if (desktopAddBtn) desktopAddBtn.disabled = true;
+        if (desktopAddBtnText) desktopAddBtnText.textContent = 'Out of Stock';
+        if (desktopBuyBtn) desktopBuyBtn.disabled = true;
+        if (mobileAddBtn) mobileAddBtn.disabled = true;
+        if (mobileAddBtnText) mobileAddBtnText.textContent = 'Out of Stock';
+        if (mobileBuyBtn) mobileBuyBtn.disabled = true;
+    }
+
+    // 5. Update accordion weights
+    const grossWeight = document.getElementById('details-gross-weight');
+    if (grossWeight) grossWeight.textContent = data.formatted_gross_weight;
+
+    const netWeight = document.getElementById('details-net-weight');
+    if (netWeight) netWeight.textContent = data.formatted_net_weight;
+
+    // 6. Update price breakup table
+    if (data.pricing) {
+        const metalCost = document.getElementById('breakup-metal-cost');
+        if (metalCost) metalCost.textContent = '₹' + data.pricing.formatted_metal_cost;
+
+        const makingCharges = document.getElementById('breakup-making-charges');
+        if (makingCharges) makingCharges.textContent = '₹' + data.pricing.formatted_making_charges;
+
+        const gst = document.getElementById('breakup-gst');
+        if (gst) gst.textContent = '₹' + data.pricing.formatted_gst_amount;
+
+        const finalAmount = document.getElementById('breakup-final-amount');
+        if (finalAmount) finalAmount.textContent = '₹' + data.pricing.formatted_final_price;
+    }
 }
 
-function selectSize(btn, size) {
-    document.querySelectorAll('.size-btn').forEach(b => {
-        b.classList.remove('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
-        b.classList.add('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
-    });
-    btn.classList.remove('border-[#EAE5DC]', 'bg-white', 'text-[#60706A]', 'font-medium');
-    btn.classList.add('border-[#083B2B]', 'border-2', 'bg-[#083B2B]/5', 'text-[#083B2B]', 'font-semibold');
+async function triggerBuyNow(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    const formData = new FormData(form);
+    
+    // Add loading indicator to button
+    const btn = form.querySelector('button[type="button"]') || event?.currentTarget;
+    if (btn) {
+        btn.classList.add('opacity-75', 'cursor-wait');
+    }
+
+    try {
+        const response = await fetch("{{ route('cart.add') }}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        });
+        const result = await response.json();
+        if (result && result.success) {
+            window.location.href = "{{ route('checkout.index') }}";
+        } else {
+            window.location.href = "{{ route('checkout.index') }}";
+        }
+    } catch (e) {
+        // Fallback: standard submit
+        form.submit();
+    }
 }
 
 function checkPincodeDelivery() {
