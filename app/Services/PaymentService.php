@@ -134,6 +134,18 @@ class PaymentService
             'paid_at'           => now(),
             'status'            => 'confirmed',
         ]);
+
+        if (! $order->confirmation_email_sent_at) {
+            $order->loadMissing(['items.product', 'items.vendor', 'user']);
+            try {
+                \Illuminate\Support\Facades\Mail::to($order->user->email ?? $order->guest_email)->queue(
+                    new \App\Mail\OrderConfirmationMail($order)
+                );
+                $order->update(['confirmation_email_sent_at' => now()]);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     /**

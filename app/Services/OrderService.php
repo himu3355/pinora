@@ -144,14 +144,16 @@ class OrderService
 
             }
 
-            // ── 4. Send confirmation email (queued) ───────────────────────
+            // ── 4. Send confirmation email (queued, COD only; online payments send on paid) ──
             $order->load(['items.product', 'items.vendor', 'user']);
-            try {
-                Mail::to($user->email)->queue(new OrderConfirmationMail($order));
-                $order->update(['confirmation_email_sent_at' => now()]);
-            } catch (\Exception $e) {
-                // Log mail sending failure but do not roll back the order placement transaction
-                report($e);
+            if ($paymentMethod === 'cod') {
+                try {
+                    Mail::to($user->email)->queue(new OrderConfirmationMail($order));
+                    $order->update(['confirmation_email_sent_at' => now()]);
+                } catch (\Exception $e) {
+                    // Log mail sending failure but do not roll back the order placement transaction
+                    report($e);
+                }
             }
 
             return $order;
