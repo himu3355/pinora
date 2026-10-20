@@ -407,6 +407,13 @@ class ShopController extends Controller
 
 ## Notes
 
+- **Global Live Search & Instant Suggestions (Phase 1)**:
+  - Route: `GET /search/suggestions?q={term}` handled by `ShopController::suggestions`.
+  - Multi-Keyword & Attribute Matching: Evaluates user query across product `name`, `short_description`, `description`, `sku`, `metal_type`, `purity`, and matching `category` names with multi-word splitting.
+  - Live Suggestion Payload: Returns matching categories (with product counts) and matching products (with live calculated price via `PricingService`, image URL, metal badge, and direct URL), plus total matches and a `view_all_url`.
+  - Frontend UI:
+    - **Desktop Overlay (`#global-search-overlay`)**: Fast typeahead with 200ms debounce, loading spinner, popular trending search tags (`22K Gold Nose Pin`, `Floral Studs`, `Diamond Solitaire`, etc.), matching categories pills, rich product items, and a sticky "View all results" link.
+    - **Mobile Search Bar**: Dedicated inline live dropdown panel (`#mobile-search-results`) right beneath the mobile search input with click-outside auto-close and Escape key listeners.
 - **Category & Sub-category Circle Slider**:
   - Automatically identifies whether an active category filter has subcategories or is a subcategory itself.
   - When a category with subcategories or a subcategory is selected, the circular slider displays the subcategories belonging to that parent category, styling the active subcategory with border and ring indicators.

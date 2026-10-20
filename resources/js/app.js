@@ -240,19 +240,201 @@ document.addEventListener('DOMContentLoaded', () => {
         backdrop.addEventListener('click', closeAllDrawers);
     }
 
-    // Search Overlay Toggles
+    // Search Overlay & Live Autocomplete
     const desktopSearchBtn = document.getElementById('desktop-search-trigger');
     const mobileSearchBtn = document.getElementById('mobile-search-trigger');
     const searchOverlay = document.getElementById('global-search-overlay');
     const searchClose = document.getElementById('search-close');
-    const searchInput = document.getElementById('global-search-input');
-    
+    const desktopSearchInput = document.getElementById('global-search-input');
+    const desktopSearchResults = document.getElementById('desktop-search-results');
+    const desktopPopularSearches = document.getElementById('desktop-popular-searches');
+
+    const mobileSearchInput = document.getElementById('mobile-search-input');
+    const mobileSearchResults = document.getElementById('mobile-search-results');
+    const mobileSearchWrapper = document.getElementById('mobile-search-wrapper');
+
+    let searchAbortController = null;
+    let searchDebounceTimer = null;
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return String(text).replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function renderSearchResults(data, targetContainer, popularContainer, query) {
+        if (!targetContainer) return;
+
+        if (popularContainer) {
+            if (query.length >= 2) {
+                popularContainer.classList.add('hidden');
+            } else {
+                popularContainer.classList.remove('hidden');
+                targetContainer.innerHTML = '';
+                targetContainer.classList.add('hidden');
+                return;
+            }
+        }
+
+        if (!data || (data.products.length === 0 && data.categories.length === 0)) {
+            targetContainer.innerHTML = `
+                <div class="py-6 px-4 text-center">
+                    <p class="text-xs text-gray-500 mb-2">No jewellery found matching "<strong>${escapeHtml(query)}</strong>"</p>
+                    <a href="${getUrl('/shop')}" class="text-xs text-[#083B2B] font-semibold hover:underline">Browse All Collections &rarr;</a>
+                </div>
+            `;
+            targetContainer.classList.remove('hidden');
+            return;
+        }
+
+        let html = '';
+
+        // Matching categories
+        if (data.categories && data.categories.length > 0) {
+            html += `
+                <div class="py-2.5 px-3">
+                    <p class="text-[0.68rem] uppercase font-bold tracking-wider text-[#A37F18] mb-1.5">Categories</p>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        ${data.categories.map(cat => `
+                            <a href="${cat.url}" class="text-xs px-2.5 py-1 rounded-lg bg-[#FAF8F5] hover:bg-[#083B2B] hover:text-white border border-[#EAE5DC] text-[#142E25] font-medium transition-colors flex items-center gap-1">
+                                <span>${escapeHtml(cat.name)}</span>
+                                <span class="text-[0.65rem] opacity-70">(${cat.product_count})</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Matching products
+        if (data.products && data.products.length > 0) {
+            html += `
+                <div class="py-2">
+                    <p class="text-[0.68rem] uppercase font-bold tracking-wider text-[#A37F18] px-3 mb-1.5">Products (${data.total_matches})</p>
+                    <div class="space-y-1">
+                        ${data.products.map(p => `
+                            <a href="${p.url}" class="flex items-center gap-3 p-2 hover:bg-[#FAF8F5] rounded-xl transition-colors group">
+                                <img src="${p.image_url}" alt="${escapeHtml(p.name)}" class="w-11 h-11 object-cover rounded-lg bg-gray-100 flex-shrink-0 border border-[#EAE5DC]">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="text-[0.65rem] text-[#8E9E98] truncate">${escapeHtml(p.category_name)}</span>
+                                        ${p.metal_badge ? `<span class="text-[0.62rem] px-1.5 py-0.2 bg-[#C59B27]/10 text-[#A37F18] rounded font-medium">${escapeHtml(p.metal_badge)}</span>` : ''}
+                                    </div>
+                                    <h4 class="text-xs font-semibold text-[#142E25] group-hover:text-[#083B2B] truncate">${escapeHtml(p.name)}</h4>
+                                </div>
+                                <div class="text-right flex-shrink-0">
+                                    <span class="text-xs font-bold text-[#083B2B]">${escapeHtml(p.price_formatted)}</span>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Footer link
+        html += `
+            <div class="p-2.5 bg-[#FAF8F5] text-center border-t border-[#EAE5DC]">
+                <a href="${data.view_all_url}" class="text-xs font-bold text-[#083B2B] hover:text-[#C59B27] inline-flex items-center gap-1 transition-colors">
+                    <span>View all ${data.total_matches} results for "${escapeHtml(query)}"</span>
+                    <span>&rarr;</span>
+                </a>
+            </div>
+        `;
+
+        targetContainer.innerHTML = html;
+        targetContainer.classList.remove('hidden');
+    }
+
+    async function handleLiveSearch(query, targetContainer, popularContainer) {
+        const cleanQuery = query.trim();
+
+        if (cleanQuery.length < 2) {
+            if (popularContainer) popularContainer.classList.remove('hidden');
+            if (targetContainer) {
+                targetContainer.innerHTML = '';
+                targetContainer.classList.add('hidden');
+            }
+            return;
+        }
+
+        if (searchAbortController) {
+            searchAbortController.abort();
+        }
+        searchAbortController = new AbortController();
+
+        // Show subtle loading state
+        if (targetContainer) {
+            if (popularContainer) popularContainer.classList.add('hidden');
+            targetContainer.innerHTML = `
+                <div class="py-6 px-4 text-center text-xs text-[#8E9E98] flex items-center justify-center gap-2">
+                    <span class="inline-block w-3.5 h-3.5 border-2 border-[#083B2B] border-t-transparent rounded-full animate-spin"></span>
+                    <span>Searching Pinora...</span>
+                </div>
+            `;
+            targetContainer.classList.remove('hidden');
+        }
+
+        try {
+            const url = getUrl('/search/suggestions?q=' + encodeURIComponent(cleanQuery));
+            const response = await fetch(url, {
+                signal: searchAbortController.signal,
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await response.json();
+            renderSearchResults(data, targetContainer, popularContainer, cleanQuery);
+        } catch (e) {
+            if (e.name !== 'AbortError') {
+                console.error('Search fetch error:', e);
+            }
+        }
+    }
+
+    function setupSearchInput(inputEl, resultsEl, popularEl) {
+        if (!inputEl) return;
+
+        inputEl.addEventListener('input', (e) => {
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                handleLiveSearch(e.target.value, resultsEl, popularEl);
+            }, 200);
+        });
+
+        inputEl.addEventListener('focus', () => {
+            if (inputEl.value.trim().length >= 2) {
+                handleLiveSearch(inputEl.value, resultsEl, popularEl);
+            } else if (popularEl) {
+                popularEl.classList.remove('hidden');
+            }
+        });
+    }
+
+    setupSearchInput(desktopSearchInput, desktopSearchResults, desktopPopularSearches);
+    setupSearchInput(mobileSearchInput, mobileSearchResults, null);
+
+    // Popular tags click handler
+    document.querySelectorAll('.search-pill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const term = btn.dataset.searchTerm || btn.textContent.trim();
+            if (desktopSearchInput) {
+                desktopSearchInput.value = term;
+                desktopSearchInput.focus();
+                handleLiveSearch(term, desktopSearchResults, desktopPopularSearches);
+            }
+        });
+    });
+
     function openSearch() {
         if (!searchOverlay) return;
         closeAllDesktopDropdowns(); // Close dropdowns when search opens
         searchOverlay.classList.remove('opacity-0', 'pointer-events-none');
         setTimeout(() => {
-            if (searchInput) searchInput.focus();
+            if (desktopSearchInput) {
+                desktopSearchInput.focus();
+                if (desktopSearchInput.value.trim().length >= 2) {
+                    handleLiveSearch(desktopSearchInput.value, desktopSearchResults, desktopPopularSearches);
+                }
+            }
         }, 100);
         document.body.style.overflow = 'hidden';
     }
@@ -283,6 +465,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 menu.classList.remove('opacity-100', 'scale-100', 'pointer-events-auto');
                 menu.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
             }
+        }
+        if (mobileSearchWrapper && !mobileSearchWrapper.contains(e.target)) {
+            if (mobileSearchResults) mobileSearchResults.classList.add('hidden');
         }
     });
 

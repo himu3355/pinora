@@ -85,10 +85,32 @@ class ShopController extends Controller
 
         // Search
         if ($request->filled('search')) {
-            $term = $request->search;
-            $query->where(function ($q) use ($term) {
+            $term = trim($request->search);
+            $words = array_values(array_filter(explode(' ', $term), fn($w) => mb_strlen($w) >= 2));
+
+            $query->where(function ($q) use ($term, $words) {
                 $q->where('name', 'like', "%{$term}%")
-                  ->orWhere('short_description', 'like', "%{$term}%");
+                  ->orWhere('short_description', 'like', "%{$term}%")
+                  ->orWhere('sku', 'like', "%{$term}%")
+                  ->orWhere('description', 'like', "%{$term}%")
+                  ->orWhere('metal_type', 'like', "%{$term}%")
+                  ->orWhere('purity', 'like', "%{$term}%")
+                  ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%{$term}%"));
+
+                if (count($words) > 1) {
+                    $q->orWhere(function ($multiQ) use ($words) {
+                        foreach ($words as $word) {
+                            $multiQ->where(function ($sub) use ($word) {
+                                $sub->where('name', 'like', "%{$word}%")
+                                    ->orWhere('short_description', 'like', "%{$word}%")
+                                    ->orWhere('sku', 'like', "%{$word}%")
+                                    ->orWhere('metal_type', 'like', "%{$word}%")
+                                    ->orWhere('purity', 'like', "%{$word}%")
+                                    ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%{$word}%"));
+                            });
+                        }
+                    });
+                }
             });
         }
 
@@ -154,6 +176,102 @@ class ShopController extends Controller
             'sliderCategories',
             'isSubCategoryMode'
         ));
+    }
+
+    public function suggestions(Request $request)
+    {
+        $term = trim($request->get('q', ''));
+
+        if (mb_strlen($term) < 2) {
+            return response()->json([
+                'query' => $term,
+                'products' => [],
+                'categories' => [],
+                'total_matches' => 0,
+                'view_all_url' => route('shop.index'),
+                'popular_searches' => [
+                    '22K Gold Nose Pin',
+                    'Floral Studs',
+                    'Diamond Solitaire',
+                    'Daily Wear',
+                    'Silver Kada',
+                    'Gold Ring'
+                ]
+            ]);
+        }
+
+        // Matching categories (up to 4)
+        $categories = Category::active()
+            ->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                  ->orWhere('description', 'like', "%{$term}%");
+            })
+            ->withCount(['products' => fn($p) => $p->active()])
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->take(4)
+            ->get()
+            ->map(fn($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'slug' => $cat->slug,
+                'url' => route('shop.index', ['category' => $cat->slug]),
+                'product_count' => $cat->products_count,
+            ]);
+
+        // Build product query with multi-field search
+        $productQuery = Product::active()
+            ->with(['primaryImage', 'category', 'vendor']);
+
+        $words = array_values(array_filter(explode(' ', $term), fn($w) => mb_strlen($w) >= 2));
+
+        $productQuery->where(function ($q) use ($term, $words) {
+            $q->where('name', 'like', "%{$term}%")
+              ->orWhere('short_description', 'like', "%{$term}%")
+              ->orWhere('sku', 'like', "%{$term}%")
+              ->orWhere('metal_type', 'like', "%{$term}%")
+              ->orWhere('purity', 'like', "%{$term}%")
+              ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%{$term}%"));
+
+            if (count($words) > 1) {
+                $q->orWhere(function ($multiQ) use ($words) {
+                    foreach ($words as $word) {
+                        $multiQ->where(function ($sub) use ($word) {
+                            $sub->where('name', 'like', "%{$word}%")
+                                ->orWhere('short_description', 'like', "%{$word}%")
+                                ->orWhere('sku', 'like', "%{$word}%")
+                                ->orWhere('metal_type', 'like', "%{$word}%")
+                                ->orWhere('purity', 'like', "%{$word}%")
+                                ->orWhereHas('category', fn($c) => $c->where('name', 'like', "%{$word}%"));
+                        });
+                    }
+                });
+            }
+        });
+
+        $totalMatches = (clone $productQuery)->count();
+        $products = $productQuery->latest()->take(5)->get()->map(function ($p) {
+            $price = $p->calculated_price;
+            $metalBadge = trim(($p->purity ?? '') . ' ' . ucfirst($p->metal_type ?? ''));
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->slug,
+                'url' => route('product.show', $p->slug),
+                'image_url' => $p->primary_image_url,
+                'category_name' => $p->category?->name ?? 'Jewellery',
+                'metal_badge' => $metalBadge ?: null,
+                'price_formatted' => $price ? '₹' . number_format($price, 0) : ($p->is_price_on_request ? 'Price on Request' : ''),
+            ];
+        });
+
+        return response()->json([
+            'query' => $term,
+            'products' => $products,
+            'categories' => $categories,
+            'total_matches' => $totalMatches,
+            'view_all_url' => route('shop.index', ['search' => $term]),
+        ]);
     }
 
     public function byCategory(string $slug)

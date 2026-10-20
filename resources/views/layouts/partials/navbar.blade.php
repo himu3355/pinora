@@ -311,12 +311,14 @@
     </div>
 
     {{-- Mobile Dedicated Search Bar (Visible on mobile right beneath header, matching Mockup 1 & 3) --}}
-    <div class="pb-3 pt-0 md:hidden">
-        <form action="{{ route('shop.index') }}" method="GET" class="relative">
+    <div class="pb-3 pt-0 md:hidden relative" id="mobile-search-wrapper">
+        <form action="{{ route('shop.index') }}" method="GET" class="relative" id="mobile-search-form">
             <input type="text" 
+                   id="mobile-search-input"
                    name="search" 
                    value="{{ request('search') }}"
-                   placeholder="Search for nose pins..." 
+                   autocomplete="off"
+                   placeholder="Search for nose pins, 22K gold, studs..." 
                    class="w-full bg-[#FAF8F5] text-[#142E25] placeholder-[#8E9E98] text-xs sm:text-sm pl-9 pr-10 py-2.5 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-[#C59B27] shadow-inner transition-all">
             
             {{-- Search icon left --}}
@@ -333,6 +335,10 @@
                 </svg>
             </button>
         </form>
+
+        {{-- Mobile Live Autocomplete Dropdown Panel --}}
+        <div id="mobile-search-results" class="hidden absolute left-0 right-0 top-full mt-1.5 bg-white text-[#142E25] rounded-2xl shadow-2xl border border-[#EAE5DC] overflow-hidden z-50 max-h-[75vh] overflow-y-auto">
+        </div>
     </div>
 </nav>
 
@@ -418,24 +424,56 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
 
-    <div class="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-2xl text-center">
-        <div class="flex items-center justify-center gap-2 mb-3">
-            <svg class="w-6 h-6 text-[#C59B27]" viewBox="0 0 100 100" fill="currentColor">
-                <circle cx="50" cy="50" r="12" fill="#C59B27"/>
-                <circle cx="50" cy="20" r="12" fill="#E0C475"/>
-                <circle cx="50" cy="80" r="12" fill="#E0C475"/>
-                <circle cx="20" cy="50" r="12" fill="#E0C475"/>
-                <circle cx="80" cy="50" r="12" fill="#E0C475"/>
-            </svg>
-            <h2 class="font-primary text-3xl font-semibold text-[#083B2B] tracking-wide">Search Pinora</h2>
+    <div class="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-3xl shadow-2xl text-left border border-[#EAE5DC] flex flex-col max-h-[85vh]">
+        <div class="flex items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-[#C59B27]" viewBox="0 0 100 100" fill="currentColor">
+                    <circle cx="50" cy="50" r="12" fill="#C59B27"/>
+                    <circle cx="50" cy="20" r="12" fill="#E0C475"/>
+                    <circle cx="50" cy="80" r="12" fill="#E0C475"/>
+                    <circle cx="20" cy="50" r="12" fill="#E0C475"/>
+                    <circle cx="80" cy="50" r="12" fill="#E0C475"/>
+                </svg>
+                <h2 class="font-primary text-2xl font-semibold text-[#083B2B] tracking-wide">Search Pinora</h2>
+            </div>
+            <span class="text-[0.7rem] uppercase tracking-wider text-[#A37F18] font-semibold bg-[#FAF8F5] px-2.5 py-1 rounded-full border border-[#EAE5DC]">ESC to close</span>
         </div>
-        <p class="text-xs text-gray-500 mb-6">Explore our curated catalogue of 22K gold nose pins, floral studs, & solitaires.</p>
-        <form action="{{ route('shop.index') }}" method="GET" class="relative">
-            <input type="text" id="global-search-input" name="search" placeholder="E.g. Floral, Diamond stud, 22K gold..." class="w-full bg-[#FAF8F5] border border-[#EAE5DC] rounded-xl px-5 py-3.5 text-[#142E25] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#083B2B] text-base transition-all">
-            <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2 rounded-lg bg-[#083B2B] text-white border-0 cursor-pointer hover:bg-[#062E23] transition-all text-sm font-semibold">
+        <p class="text-xs text-gray-500 mb-4">Explore certified 22K gold nose pins, floral studs, solitaires, & fine silver jewellery.</p>
+        
+        <form action="{{ route('shop.index') }}" method="GET" class="relative mb-3" id="desktop-search-form">
+            <input type="text" 
+                   id="global-search-input" 
+                   name="search" 
+                   autocomplete="off"
+                   placeholder="Search by design, metal (e.g. 22K Gold), purity, or SKU..." 
+                   class="w-full bg-[#FAF8F5] border border-[#EAE5DC] rounded-xl pl-11 pr-24 py-3.5 text-[#142E25] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#083B2B] focus:bg-white text-sm sm:text-base transition-all">
+            
+            <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+                </svg>
+            </div>
+
+            <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-2 rounded-lg bg-[#083B2B] text-white border-0 cursor-pointer hover:bg-[#062E23] transition-all text-xs sm:text-sm font-semibold">
                 Search
             </button>
         </form>
+
+        {{-- Popular Searches Pills (Visible when input is empty) --}}
+        <div id="desktop-popular-searches" class="flex items-center gap-1.5 flex-wrap pt-1 pb-2">
+            <span class="text-xs font-semibold text-[#8E9E98] mr-1">Trending:</span>
+            @foreach(['22K Gold Nose Pin', 'Floral Studs', 'Diamond Solitaire', 'Daily Wear', 'Silver Kada', 'Gold Ring'] as $popularTerm)
+                <button type="button" 
+                        class="search-pill-btn text-xs px-3 py-1 rounded-full bg-[#FAF8F5] hover:bg-[#083B2B] hover:text-white border border-[#EAE5DC] text-[#142E25] transition-all cursor-pointer"
+                        data-search-term="{{ $popularTerm }}">
+                    {{ $popularTerm }}
+                </button>
+            @endforeach
+        </div>
+
+        {{-- Live Search Results Container --}}
+        <div id="desktop-search-results" class="hidden flex-1 overflow-y-auto mt-2 pt-2 border-t border-[#EAE5DC] divide-y divide-[#FAF8F5]">
+        </div>
     </div>
 </div>
 
