@@ -38,4 +38,10 @@
         </select>
         @error('new_address.state')<div class="text-[#f08080] text-[0.78rem] mt-1">{{ $message }}</div>@enderror
     </div>
+    <div class="col-span-2 pt-2">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" name="save_address" value="1" checked class="accent-gold rounded">
+            <span class="text-xs text-text-muted">Save this address to my account for future orders</span>
+        </label>
+    </div>
 </div>

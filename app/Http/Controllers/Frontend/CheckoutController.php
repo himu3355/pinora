@@ -9,6 +9,7 @@ use App\Services\GstService;
 use App\Services\OrderService;
 use App\Services\PricingService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CheckoutController extends Controller
 {
@@ -65,35 +66,66 @@ class CheckoutController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'address_id'       => 'required_without:new_address|nullable|exists:addresses,id',
-            'new_address'      => 'required_without:address_id|nullable|array',
-            'new_address.full_name'       => 'required_with:new_address|string|max:120',
-            'new_address.phone'           => 'required_with:new_address|string|max:20',
-            'new_address.address_line_1'  => 'required_with:new_address|string|max:255',
-            'new_address.address_line_2'  => 'nullable|string|max:255',
-            'new_address.landmark'        => 'nullable|string|max:255',
-            'new_address.city'            => 'required_with:new_address|string|max:100',
-            'new_address.state'           => 'required_with:new_address|string|max:100',
-            'new_address.pincode'         => 'required_with:new_address|string|max:10',
-            'payment_method'   => 'required|in:cod,razorpay',
-        ]);
+        $user = auth()->user();
+        $hasSavedAddress = $request->filled('address_id');
+
+        $rules = [
+            'payment_method' => 'required|in:cod,razorpay',
+        ];
+
+        if ($hasSavedAddress) {
+            $rules['address_id'] = [
+                'required',
+                Rule::exists('addresses', 'id')->where('user_id', $user->id),
+            ];
+        } else {
+            $rules['new_address']               = 'required|array';
+            $rules['new_address.full_name']      = 'required|string|max:120';
+            $rules['new_address.phone']          = 'required|string|max:20';
+            $rules['new_address.address_line_1'] = 'required|string|max:255';
+            $rules['new_address.address_line_2'] = 'nullable|string|max:255';
+            $rules['new_address.landmark']       = 'nullable|string|max:255';
+            $rules['new_address.city']           = 'required|string|max:100';
+            $rules['new_address.state']          = 'required|string|max:100';
+            $rules['new_address.pincode']        = 'required|string|max:10';
+        }
+
+        $validated = $request->validate($rules);
 
         if ($this->cart->isEmpty()) {
             return redirect()->route('cart.index')->with('error', 'Your cart is empty.');
         }
 
-        $user = auth()->user();
-
         // Resolve shipping address
-        if ($request->filled('address_id')) {
+        if ($hasSavedAddress) {
+            // Using existing saved address: NEVER creates a new database row
             $address = Address::where('user_id', $user->id)->findOrFail($validated['address_id']);
         } else {
-            $address = Address::create(array_merge($validated['new_address'], [
-                'user_id' => $user->id,
-                'type'    => 'shipping',
-                'country' => 'India',
-            ]));
+            $newAddr = $validated['new_address'];
+
+            // Check if user already has an identical address in their address book
+            $existingAddress = Address::where('user_id', $user->id)
+                ->where('address_line_1', $newAddr['address_line_1'])
+                ->where('pincode', $newAddr['pincode'])
+                ->where('city', $newAddr['city'])
+                ->first();
+
+            if ($existingAddress) {
+                $address = $existingAddress;
+            } elseif ($request->boolean('save_address', true)) {
+                $address = Address::create(array_merge($newAddr, [
+                    'user_id' => $user->id,
+                    'type'    => 'shipping',
+                    'country' => 'India',
+                ]));
+            } else {
+                // Non-persisted instance for order snapshot without adding to address book
+                $address = new Address(array_merge($newAddr, [
+                    'user_id' => $user->id,
+                    'type'    => 'shipping',
+                    'country' => 'India',
+                ]));
+            }
         }
 
         try {

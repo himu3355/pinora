@@ -36,7 +36,7 @@
                         </div>
 
                         {{-- Toggle for new address --}}
-                        <button type="button" onclick="toggleNewAddress()" class="text-sm text-gold bg-transparent border-0 cursor-pointer underline hover:text-gold-light transition-colors">+ Add a different address</button>
+                        <button type="button" onclick="toggleNewAddress()" id="toggle-new-address-btn" class="text-sm text-gold bg-transparent border-0 cursor-pointer underline hover:text-gold-light transition-colors">+ Add a different address</button>
                         <div id="new-address-form" class="hidden mt-6">
                         @else
                         <div id="new-address-form">
@@ -133,23 +133,89 @@
 
 @push('scripts')
 <script>
-function toggleNewAddress() {
-    const form = document.getElementById('new-address-form');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
 function selectAddress(id) {
+    // Hide new address form and disable its fields so empty values are not submitted
+    const newAddrContainer = document.getElementById('new-address-form');
+    if (newAddrContainer) {
+        newAddrContainer.classList.add('hidden');
+        newAddrContainer.querySelectorAll('input, select, textarea').forEach(el => {
+            el.disabled = true;
+        });
+    }
+
+    const toggleBtn = document.getElementById('toggle-new-address-btn');
+    if (toggleBtn) {
+        toggleBtn.textContent = '+ Add a different address';
+    }
+
+    const radio = document.querySelector('input[name="address_id"][value="' + id + '"]');
+    if (radio) {
+        radio.checked = true;
+    }
+
     document.querySelectorAll('[id^="addr-label-"]').forEach(el => {
         el.classList.remove('border-gold');
         el.classList.add('border-border-gold');
     });
     const target = document.getElementById('addr-label-' + id);
-    target.classList.add('border-gold');
-    target.classList.remove('border-border-gold');
+    if (target) {
+        target.classList.add('border-gold');
+        target.classList.remove('border-border-gold');
+    }
 }
-// Highlight default on load
+
+function toggleNewAddress() {
+    const newAddrContainer = document.getElementById('new-address-form');
+    if (!newAddrContainer) return;
+
+    const isHidden = newAddrContainer.classList.contains('hidden');
+    const toggleBtn = document.getElementById('toggle-new-address-btn');
+
+    if (isHidden) {
+        // Reveal form and enable fields
+        newAddrContainer.classList.remove('hidden');
+        newAddrContainer.querySelectorAll('input, select, textarea').forEach(el => {
+            el.disabled = false;
+        });
+
+        // Uncheck all saved address radio buttons
+        document.querySelectorAll('input[name="address_id"]').forEach(r => r.checked = false);
+        document.querySelectorAll('[id^="addr-label-"]').forEach(el => {
+            el.classList.remove('border-gold');
+            el.classList.add('border-border-gold');
+        });
+
+        if (toggleBtn) toggleBtn.textContent = '✕ Use a saved address instead';
+    } else {
+        // Hide form and disable fields
+        newAddrContainer.classList.add('hidden');
+        newAddrContainer.querySelectorAll('input, select, textarea').forEach(el => {
+            el.disabled = true;
+        });
+
+        const firstRadio = document.querySelector('input[name="address_id"]');
+        if (firstRadio) {
+            selectAddress(firstRadio.value);
+        }
+
+        if (toggleBtn) toggleBtn.textContent = '+ Add a different address';
+    }
+}
+
+// Highlight and select default on load, or enable new address fields if no saved addresses
 document.addEventListener('DOMContentLoaded', () => {
     const checked = document.querySelector('input[name="address_id"]:checked');
-    if (checked) selectAddress(checked.value);
+    if (checked) {
+        selectAddress(checked.value);
+    } else {
+        const newAddrContainer = document.getElementById('new-address-form');
+        if (newAddrContainer) {
+            newAddrContainer.classList.remove('hidden');
+            newAddrContainer.querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = false;
+            });
+        }
+    }
 });
 </script>
 @endpush
