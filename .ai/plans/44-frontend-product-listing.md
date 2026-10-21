@@ -407,6 +407,33 @@ class ShopController extends Controller
 
 ## Notes
 
+- **Shop Page Dynamic Sliders & UX Overhaul (Phase 3)**:
+  - **Dynamic Catalog Bounds**: `ShopController` computes the real minimum and maximum live calculated prices (`$bounds['min_price']` & `$bounds['max_price']`) and weights (`$bounds['min_weight']` & `$bounds['max_weight']`) from active catalog products with cache layer (`shop_catalog_bounds`).
+  - **Dual-Thumb Interactive Range Sliders**:
+    - Custom styled dual-thumb range sliders for Price and Weight with emerald track fill (`#083B2B`).
+    - Two-way interactive sync: sliding thumbs updates numerical inputs and live range display; typing in inputs dynamically updates thumbs and colored fill track.
+    - Quick preset chips (e.g. Under ₹10k, ₹10k–₹25k, ₹25k–₹50k, ₹50k–₹1L, >₹1L and <1g, 1g–2g, 2g–4g, 4g–8g, >8g) for 1-click bracket selection.
+  - **Desktop Persistent Sticky Sidebar**:
+    - On large screens (`lg:`), filters are persistently mounted in a sticky desktop sidebar (`w-72`) docked beneath the top bar, allowing desktop shoppers to filter without opening a modal.
+    - Mobile/tablet shoppers use the slide-in drawer (`#filter-modal-drawer`) with a live "Show X Products" floating bottom bar.
+  - **Seamless AJAX Live Updates (No Full Page Reload)**:
+    - All filter changes, sort dropdown adjustments, pagination links, and active tag removals perform asynchronous `fetch()` requests expecting JSON.
+    - Returns modular HTML chunks (`grid_html`, `pagination_html`, `active_filters_html`, `title`, `count`, `total_count`, `active_filter_count`).
+    - Smooth subtle loading spinner overlay (`#shop-grid-loading`) during network requests.
+    - Full URL synchronization using HTML5 History API (`history.pushState` and `window.addEventListener('popstate')`) for bookmarking and back/forward browser navigation.
+- **Shop Page Filter Overhaul (Phase 2)**:
+  - **Multi-Select Checkboxes**: Converted `metal_type[]` (Gold, Silver, Platinum) and `purity[]` (22K, 18K, 14K, 925) into multi-select checkbox groups in the filter drawer.
+  - **Price Range Filter**: Includes quick presets (Under ₹5,000, ₹5,000–₹10,000, ₹10,000–₹25,000, ₹25,000–₹50,000, Above ₹50,000) and custom numerical `min_price` and `max_price` inputs with ₹ prefix. Supports rate-linked dynamic pricing (`PricingService::calculateForProduct`) so products without static `base_price` are accurately filtered and sorted.
+  - **Weight Filter (Grams)**: Supports quick presets (Under 1g, 1g–2g, 2g–4g, Above 4g) and custom `min_weight` and `max_weight` inputs querying `products.weight_grams`.
+  - **Dynamic Active Filter Pills Strip**:
+    - Calculates total active filter count including individual selected metals, purities, price brackets, and weight brackets.
+    - Renders individual removable pills for each selected metal, each selected purity, price filter, and weight filter with dedicated removal links preserving all other query parameters.
+    - Renders a "Clear All" shortcut when any filters are active.
+  - **Array-Safe Parameter Preservation**:
+    - Sort form (`#sort-select-form`) and drawer form safely unpack multi-value array parameters (`name="metal_type[]"`, `name="purity[]"`), preventing `Array to string conversion` exceptions.
+  - **Client-Side Sync**:
+    - Typing into custom price/weight inputs automatically clears preset radio selections.
+    - Selecting a preset radio clears custom min/max input fields.
 - **Global Live Search & Instant Suggestions (Phase 1)**:
   - Route: `GET /search/suggestions?q={term}` handled by `ShopController::suggestions`.
   - Multi-Keyword & Attribute Matching: Evaluates user query across product `name`, `short_description`, `description`, `sku`, `metal_type`, `purity`, and matching `category` names with multi-word splitting.

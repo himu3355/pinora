@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Vendor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ShopController extends Controller
 {
@@ -50,14 +51,120 @@ class ShopController extends Controller
             }
         }
 
-        // Metal type filter
-        if ($request->filled('metal_type')) {
-            $query->where('metal_type', $request->metal_type);
+        // Metal type filter (supports multiple or single)
+        if ($request->has('metal_type')) {
+            $metals = is_array($request->metal_type) ? $request->metal_type : explode(',', (string) $request->metal_type);
+            $metals = array_filter(array_map('trim', $metals));
+            if (!empty($metals)) {
+                $query->whereIn('metal_type', $metals);
+            }
         }
 
-        // Purity filter
-        if ($request->filled('purity')) {
-            $query->where('purity', $request->purity);
+        // Purity filter (supports multiple or single)
+        if ($request->has('purity')) {
+            $purities = is_array($request->purity) ? $request->purity : explode(',', (string) $request->purity);
+            $purities = array_filter(array_map('trim', $purities));
+            if (!empty($purities)) {
+                $query->whereIn('purity', $purities);
+            }
+        }
+
+        // Price Filter (Min / Max or Preset)
+        $minPrice = $request->filled('min_price') ? (float) $request->min_price : null;
+        $maxPrice = $request->filled('max_price') ? (float) $request->max_price : null;
+
+        if ($request->filled('price_range')) {
+            switch ($request->price_range) {
+                case 'under_5000':
+                    $minPrice = 0;
+                    $maxPrice = 5000;
+                    break;
+                case '5000_10000':
+                    $minPrice = 5000;
+                    $maxPrice = 10000;
+                    break;
+                case 'under_10000':
+                    $minPrice = 0;
+                    $maxPrice = 10000;
+                    break;
+                case '10000_25000':
+                    $minPrice = 10000;
+                    $maxPrice = 25000;
+                    break;
+                case '25000_50000':
+                    $minPrice = 25000;
+                    $maxPrice = 50000;
+                    break;
+                case '50000_100000':
+                    $minPrice = 50000;
+                    $maxPrice = 100000;
+                    break;
+                case 'above_50000':
+                    $minPrice = 50000;
+                    $maxPrice = null;
+                    break;
+                case 'above_100000':
+                    $minPrice = 100000;
+                    $maxPrice = null;
+                    break;
+            }
+        }
+
+        if ($minPrice !== null || $maxPrice !== null) {
+            $candidateIds = (clone $query)->pluck('id');
+            $matchingIds = Product::whereIn('id', $candidateIds)->get()->filter(function ($prod) use ($minPrice, $maxPrice) {
+                $price = $prod->calculated_price ?? (float) $prod->base_price;
+                if ($price === null) return false;
+                if ($minPrice !== null && $price < $minPrice) return false;
+                if ($maxPrice !== null && $price > $maxPrice) return false;
+                return true;
+            })->pluck('id');
+
+            $query->whereIn('id', $matchingIds);
+        }
+
+        // Weight Filter (Min / Max or Preset in grams)
+        $minWeight = $request->filled('min_weight') ? (float) $request->min_weight : null;
+        $maxWeight = $request->filled('max_weight') ? (float) $request->max_weight : null;
+
+        if ($request->filled('weight_range')) {
+            switch ($request->weight_range) {
+                case 'under_1g':
+                    $minWeight = 0;
+                    $maxWeight = 1.0;
+                    break;
+                case '1g_2g':
+                    $minWeight = 1.0;
+                    $maxWeight = 2.0;
+                    break;
+                case '2g_4g':
+                    $minWeight = 2.0;
+                    $maxWeight = 4.0;
+                    break;
+                case '2g_5g':
+                    $minWeight = 2.0;
+                    $maxWeight = 5.0;
+                    break;
+                case '4g_8g':
+                    $minWeight = 4.0;
+                    $maxWeight = 8.0;
+                    break;
+                case 'above_4g':
+                    $minWeight = 4.0;
+                    $maxWeight = null;
+                    break;
+                case 'above_8g':
+                    $minWeight = 8.0;
+                    $maxWeight = null;
+                    break;
+            }
+        }
+
+        if ($minWeight !== null) {
+            $query->where('weight_grams', '>=', $minWeight);
+        }
+        if ($maxWeight !== null) {
+            $query->where('weight_grams', '<=', $maxWeight);
         }
 
         // Vendor filter
@@ -117,10 +224,17 @@ class ShopController extends Controller
         // Sort
         switch ($request->get('sort', 'newest')) {
             case 'price_asc':
-                $query->orderBy('base_price', 'asc');
-                break;
             case 'price_desc':
-                $query->orderBy('base_price', 'desc');
+                $direction = $request->get('sort') === 'price_asc' ? 'asc' : 'desc';
+                $candidateProducts = (clone $query)->get();
+                $sortedIds = $candidateProducts->sortBy(function ($prod) {
+                    return $prod->calculated_price ?? (float) ($prod->base_price ?? 0);
+                }, descending: ($direction === 'desc'))->pluck('id')->values()->all();
+
+                if (!empty($sortedIds)) {
+                    $orderString = implode(',', $sortedIds);
+                    $query->orderByRaw("FIELD(id, {$orderString})");
+                }
                 break;
             case 'popular':
                 $query->withCount('orderItems')->orderByDesc('order_items_count');
@@ -139,8 +253,14 @@ class ShopController extends Controller
             $title = 'Search: "' . htmlspecialchars($request->search) . '"';
         } elseif ($selectedCategory) {
             $title = htmlspecialchars($selectedCategory->name);
-        } elseif ($request->filled('metal_type')) {
-            $title = ucfirst($request->metal_type) . ' Jewellery';
+        } elseif ($request->has('metal_type')) {
+            $metals = is_array($request->metal_type) ? $request->metal_type : explode(',', (string) $request->metal_type);
+            $metals = array_filter(array_map('trim', $metals));
+            if (!empty($metals)) {
+                $title = implode(' & ', array_map('ucfirst', $metals)) . ' Jewellery';
+            } else {
+                $title = 'All Jewellery';
+            }
         } else {
             $title = 'All Jewellery';
         }
@@ -155,14 +275,53 @@ class ShopController extends Controller
             $showing = 'Showing 0–0 of 0';
         }
 
-        if ($request->expectsJson()) {
+        // Dynamic catalog bounds (cached for performance)
+        $bounds = Cache::remember('shop_catalog_bounds', 300, function () {
+            $allActive = Product::active()->get(['id', 'base_price', 'metal_type', 'purity', 'weight_grams']);
+            $allPrices = $allActive->map(function ($p) {
+                return $p->calculated_price ?? (float) ($p->base_price ?? 0);
+            })->filter(fn($v) => $v > 0);
+
+            $minPrice = $allPrices->isNotEmpty() ? (float) floor($allPrices->min() / 100) * 100 : 0;
+            $maxPrice = $allPrices->isNotEmpty() ? (float) ceil($allPrices->max() / 1000) * 1000 : 100000;
+
+            $minWeight = (float) ($allActive->min('weight_grams') ?? 0);
+            $maxWeight = (float) ($allActive->max('weight_grams') ?? 20);
+
+            return [
+                'min_price'  => max(0, (int) $minPrice),
+                'max_price'  => (int) $maxPrice,
+                'min_weight' => max(0, floor($minWeight * 10) / 10),
+                'max_weight' => ceil($maxWeight),
+            ];
+        });
+
+        // Active Filter Count calculation
+        $selectedMetals = array_filter(is_array($request->metal_type) ? $request->metal_type : ($request->filled('metal_type') ? explode(',', (string) $request->metal_type) : []));
+        $selectedPurities = array_filter(is_array($request->purity) ? $request->purity : ($request->filled('purity') ? explode(',', (string) $request->purity) : []));
+        $hasPriceFilter = $request->filled('price_range') || $request->filled('min_price') || $request->filled('max_price');
+        $hasWeightFilter = $request->filled('weight_range') || $request->filled('min_weight') || $request->filled('max_weight');
+
+        $activeFilterCount = 0;
+        if ($request->filled('category')) $activeFilterCount++;
+        $activeFilterCount += count($selectedMetals);
+        $activeFilterCount += count($selectedPurities);
+        if ($hasPriceFilter) $activeFilterCount++;
+        if ($hasWeightFilter) $activeFilterCount++;
+        if ($request->boolean('in_stock')) $activeFilterCount++;
+        if ($request->filled('search')) $activeFilterCount++;
+        if ($request->filled('vendor_id')) $activeFilterCount++;
+
+        if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
-                'title' => $title,
-                'count' => $count,
-                'showing' => $showing,
-                'active_filters' => view('shop.partials.active-filters', compact('selectedCategory', 'vendors'))->render(),
-                'grid' => view('shop.partials.products-grid', compact('products'))->render(),
-                'pagination' => $products->links()->render()
+                'title'               => $title,
+                'count'               => $count,
+                'total_count'         => $products->total(),
+                'active_filter_count' => $activeFilterCount,
+                'showing'             => $showing,
+                'active_filters_html' => view('shop.partials.active-filters', compact('products', 'selectedCategory', 'vendors'))->render(),
+                'grid_html'           => view('shop.partials.products-grid', compact('products'))->render(),
+                'pagination_html'     => $products->links()->render(),
             ]);
         }
 
@@ -174,7 +333,9 @@ class ShopController extends Controller
             'selectedCategory',
             'parentCategory',
             'sliderCategories',
-            'isSubCategoryMode'
+            'isSubCategoryMode',
+            'bounds',
+            'activeFilterCount'
         ));
     }
 
