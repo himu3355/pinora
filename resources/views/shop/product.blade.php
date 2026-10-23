@@ -158,39 +158,6 @@
                 </span>
             </div>
 
-            {{-- Delivery Checker Box --}}
-            <div class="bg-white border border-[#EAE5DC] rounded-xl p-3 sm:p-4 mb-5 shadow-xs">
-                <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <div class="text-[#083B2B] flex-shrink-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.25h1.5a1.125 1.125 0 011.125 1.125v4.5H14.25v-5.625zM3 14.25V6.75A2.25 2.25 0 015.25 4.5h9a2.25 2.25 0 012.25 2.25v7.5" />
-                            </svg>
-                        </div>
-                        <div>
-                            <span class="block text-xs font-bold text-[#142E25]" id="pincode-est-date">Delivery by {{ date('d M', strtotime('+3 days')) }}</span>
-                            <span class="block text-[0.7rem] text-[#8E9E98]">Enter pincode to check delivery date</span>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 flex-shrink-0">
-                        <input type="text" 
-                               id="pincode-input" 
-                               maxlength="6" 
-                               placeholder="Enter Pincode" 
-                               class="w-24 sm:w-28 bg-[#FAF8F5] border border-[#EAE5DC] rounded-lg px-2.5 py-1.5 text-xs text-[#142E25] focus:outline-none focus:ring-1 focus:ring-[#083B2B]">
-                        <button type="button" 
-                                onclick="checkPincodeDelivery()" 
-                                class="bg-[#083B2B] hover:bg-[#062E23] text-white px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-colors">
-                            Check
-                        </button>
-                    </div>
-                </div>
-                <div id="pincode-feedback" class="text-[0.72rem] text-emerald-700 font-semibold mt-1.5 hidden">
-                    ✓ Available for express delivery with free shipping.
-                </div>
-            </div>
-
             {{-- Certified Metal & Purity Details --}}
             <div class="mb-5">
                 <div class="flex items-center justify-between mb-2">
@@ -795,16 +762,6 @@ async function triggerBuyNow(formId) {
         // Fallback: standard submit
         form.submit();
     }
-}
-
-function checkPincodeDelivery() {
-    const input = document.getElementById('pincode-input');
-    const feedback = document.getElementById('pincode-feedback');
-    if (!input || !input.value.trim() || input.value.trim().length < 6) {
-        alert('Please enter a valid 6-digit postal pincode.');
-        return;
-    }
-    feedback.classList.remove('hidden');
 }
 
 function toggleAccordion(id) {

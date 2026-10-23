@@ -532,3 +532,4 @@ function selectVariant(btn, variantId) {
   - The inline buy box action buttons (`#desktop-add-btn` and `#desktop-buy-btn`) are visible on mobile and desktop (`flex flex-col gap-3 mb-8`), allowing shoppers to add to cart directly from the variant selection section.
   - The sticky mobile bottom action bar (`fixed bottom-0 z-50 md:hidden`) keeps the price, Add to Cart, and Buy Now buttons pinned to the bottom of the viewport while scrolling.
   - The generic layout mobile bottom navigation bar (`resources/views/layouts/partials/mobile-bottom-nav.blade.php`) is conditionally excluded on product detail pages (`!request()->routeIs('product.show')`), preventing it from overlapping and obscuring the product purchase actions.
+- The estimated delivery checker ("Delivery by [date]" with pincode input and check button) was completely removed from the product detail page layout.
