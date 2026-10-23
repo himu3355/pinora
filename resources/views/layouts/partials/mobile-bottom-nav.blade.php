@@ -8,6 +8,7 @@
     $isAccount = request()->routeIs('account.*') && !$isWishlist;
 @endphp
 
+@if(!request()->routeIs('product.show'))
 <nav class="fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-md border-t border-[#EAE5DC] flex items-center justify-around px-2 z-40 md:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.06)]" aria-label="Mobile Navigation">
     
     {{-- Home --}}
@@ -60,3 +61,4 @@
     @endauth
 
 </nav>
+@endif

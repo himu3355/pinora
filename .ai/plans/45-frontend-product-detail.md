@@ -528,3 +528,7 @@ function selectVariant(btn, variantId) {
 - The "Buy Now" button uses asynchronous submission to `route('cart.add')` and seamlessly redirects the user directly to `route('checkout.index')`.
 - `canReview` is true only if: (a) user is logged in, (b) has a delivered order item for this product, (c) hasn't reviewed it before.
 - `route('cart.add')` and `route('wishlist.toggle')` are defined in Steps 46 and 49 respectively.
+- **Mobile View Add to Cart & Sticky Action Bar**:
+  - The inline buy box action buttons (`#desktop-add-btn` and `#desktop-buy-btn`) are visible on mobile and desktop (`flex flex-col gap-3 mb-8`), allowing shoppers to add to cart directly from the variant selection section.
+  - The sticky mobile bottom action bar (`fixed bottom-0 z-50 md:hidden`) keeps the price, Add to Cart, and Buy Now buttons pinned to the bottom of the viewport while scrolling.
+  - The generic layout mobile bottom navigation bar (`resources/views/layouts/partials/mobile-bottom-nav.blade.php`) is conditionally excluded on product detail pages (`!request()->routeIs('product.show')`), preventing it from overlapping and obscuring the product purchase actions.

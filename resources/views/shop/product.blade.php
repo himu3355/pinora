@@ -262,12 +262,12 @@
             </div>
             @endif
 
-            {{-- Desktop Buy Box Action Buttons (Hidden on mobile sticky, visible on md+) --}}
+            {{-- Buy Box Action Buttons (Visible on mobile & desktop) --}}
             @php
                 $currentStock = $selectedVariant ? $selectedVariant->stock_quantity : $product->stock_quantity;
                 $isOutOfStock = $currentStock <= 0;
             @endphp
-            <div class="hidden md:flex flex-col gap-3 mb-8">
+            <div class="flex flex-col gap-3 mb-8">
                 <form action="{{ route('cart.add') }}" method="POST" id="desktop-add-cart-form" class="grid grid-cols-2 gap-3">
                     @csrf
                     <input type="hidden" name="product_id" value="{{ $product->id }}">
@@ -608,7 +608,7 @@
 {{-- ============================================================ --}}
 {{-- STICKY BOTTOM ACTION BAR (MOBILE VIEW ONLY - Matching Image 2)--}}
 {{-- ============================================================ --}}
-<div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-[#EAE5DC] px-3.5 py-2.5 flex items-center justify-between gap-3 shadow-[0_-4px_24px_rgba(0,0,0,0.1)] md:hidden">
+<div class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-[#EAE5DC] px-3.5 py-2.5 flex items-center justify-between gap-3 shadow-[0_-4px_24px_rgba(0,0,0,0.12)] md:hidden">
     
     {{-- Price Info Left --}}
     <div class="flex-shrink-0">
