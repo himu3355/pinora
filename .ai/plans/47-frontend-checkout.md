@@ -60,14 +60,35 @@ class CheckoutController extends Controller
         $addresses = $user->addresses()->orderByDesc('is_default')->get();
         $totals    = $this->cart->totalsWithPricing($this->pricing);
 
-        // Default to IGST preview until address is selected
-        $gstBreakdown = [
-            'type'        => 'IGST',
-            'cgst'        => 0,
-            'sgst'        => 0,
-            'igst'        => $totals['gst_amount'],
-            'total'       => $totals['gst_amount'],
-        ];
+        // Resolve vendor state from first cart item if available
+        $vendorState = 'Maharashtra';
+        if (!empty($totals['items'])) {
+            $firstItem = reset($totals['items']);
+            $firstProduct = \App\Models\Product::find($firstItem['product_id']);
+            $vendorState = $firstProduct?->vendor?->state ?? 'Maharashtra';
+        }
+
+        // Calculate GST breakdown based on default address or fallback
+        $defaultAddress = $addresses->first();
+        if ($defaultAddress && !empty($defaultAddress->state)) {
+            $calculatedGst = $this->gst->calculate($totals['subtotal'], $vendorState, $defaultAddress->state);
+            $gstBreakdown = [
+                'type'  => $calculatedGst['type'],
+                'cgst'  => $calculatedGst['cgst'],
+                'sgst'  => $calculatedGst['sgst'],
+                'igst'  => $calculatedGst['igst'],
+                'total' => $calculatedGst['total_gst'],
+            ];
+        } else {
+            // Default to IGST preview until address is selected
+            $gstBreakdown = [
+                'type'  => 'igst',
+                'cgst'  => 0,
+                'sgst'  => 0,
+                'igst'  => $totals['gst_amount'],
+                'total' => $totals['gst_amount'],
+            ];
+        }
 
         return view('checkout.index', [
             'addresses'    => $addresses,
@@ -264,7 +285,7 @@ class CheckoutController extends Controller
 
                     <div class="border-t border-border-gold mt-4 pt-4">
                         <div class="flex justify-between mb-2 text-sm text-text-muted">
-                            <span>Subtotal</span>
+                            <span>Taxable Amount</span>
                             <span>₹{{ number_format($subtotal, 0) }}</span>
                         </div>
 

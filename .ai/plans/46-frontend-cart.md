@@ -136,35 +136,55 @@ class CartService
 
     /**
      * Compute live prices for all items using PricingService.
+     * Option 2: All-inclusive retail pricing where displayed total matches product page,
+     * and subtotal/gst are clean pre-tax and tax components (no double tax).
      */
     public function totalsWithPricing(PricingService $pricing): array
     {
-        $subtotal = 0;
-        $items    = [];
+        $taxableSubtotal = 0.0;
+        $totalGst        = 0.0;
+        $grandTotal      = 0.0;
+        $items           = [];
 
         foreach ($this->items() as $key => $item) {
-            $product  = Product::find($item['product_id']);
-            $breakdown = $product ? $pricing->calculate($product, $item['variant_id'] ?? null) : null;
+            $product = Product::active()->find($item['product_id']);
+            if (!$product) {
+                $this->remove($key);
+                continue;
+            }
+            $breakdown = $pricing->calculate($product, $item['variant_id'] ?? null);
 
-            $unitPrice = $breakdown ? $breakdown['final_price'] : 0;
-            $lineTotal = $unitPrice * $item['quantity'];
-            $subtotal += $lineTotal;
+            // Final consumer inclusive unit price (e.g. ₹10,300)
+            $inclusiveUnitPrice = $breakdown ? (float) $breakdown['final_price'] : 0.0;
+
+            // Taxable unit price before 3% GST (e.g. ₹10,000)
+            $taxableUnitPrice = isset($breakdown['subtotal']) && $breakdown['subtotal'] > 0
+                ? (float) $breakdown['subtotal']
+                : round($inclusiveUnitPrice / 1.03, 2);
+
+            $lineTaxable   = round($taxableUnitPrice * $item['quantity'], 2);
+            $lineInclusive = round($inclusiveUnitPrice * $item['quantity'], 2);
+            $lineGst       = round($lineInclusive - $lineTaxable, 2);
+
+            $taxableSubtotal += $lineTaxable;
+            $totalGst        += $lineGst;
+            $grandTotal      += $lineInclusive;
 
             $items[$key] = array_merge($item, [
-                'unit_price' => $unitPrice,
-                'line_total' => $lineTotal,
-                'pricing'    => $breakdown,
+                'unit_price'           => $taxableUnitPrice,       // Pre-tax base for order/tax calculations
+                'unit_price_inclusive' => $inclusiveUnitPrice,     // Inclusive display price
+                'line_total'           => $lineInclusive,          // Inclusive line total matching product page
+                'taxable_line_total'   => $lineTaxable,
+                'gst_amount'           => $lineGst,
+                'pricing'              => $breakdown,
             ]);
         }
 
-        $gstAmount = round($subtotal * 0.03, 2);
-        $total     = $subtotal + $gstAmount;
-
         return [
             'items'      => $items,
-            'subtotal'   => $subtotal,
-            'gst_amount' => $gstAmount,
-            'total'      => $total,
+            'subtotal'   => round($taxableSubtotal, 2),
+            'gst_amount' => round($totalGst, 2),
+            'total'      => round($grandTotal, 2),
         ];
     }
 }
@@ -223,11 +243,13 @@ class CartController extends Controller
         if ($request->expectsJson()) {
             $totals = $this->cart->totalsWithPricing($this->pricing);
             return response()->json([
-                'success' => true,
-                'count' => $this->cart->count(),
-                'items' => $totals['items'],
-                'subtotal' => $totals['subtotal'],
-                'message' => 'Product added to cart!'
+                'success'    => true,
+                'count'      => $this->cart->count(),
+                'items'      => $totals['items'],
+                'subtotal'   => $totals['subtotal'],
+                'gst_amount' => $totals['gst_amount'],
+                'total'      => $totals['total'],
+                'message'    => 'Product added to cart!'
             ]);
         }
 
@@ -333,7 +355,7 @@ class CartController extends Controller
                             @if($item['variant_name'])
                             <div class="text-[0.8rem] text-text-muted mb-2">{{ $item['variant_name'] }}</div>
                             @endif
-                            <div class="text-xs text-text-muted">₹{{ number_format($item['unit_price'], 0) }} / piece</div>
+                            <div class="text-xs text-text-muted">₹{{ number_format($item['unit_price_inclusive'] ?? $item['unit_price'], 0) }} / piece</div>
                             <div class="text-[0.8rem] text-text-muted mt-1">{{ ucfirst($item['metal_type']) }} {{ $item['purity'] }}</div>
                         </div>
 
@@ -372,7 +394,7 @@ class CartController extends Controller
             <h3 class="font-primary text-xl mb-6 pb-3 border-b border-border-gold text-text-light">Order Summary</h3>
 
             <div class="flex justify-between mb-3 text-sm text-text-muted">
-                <span>Subtotal</span>
+                <span>Taxable Amount</span>
                 <span id="cart-summary-subtotal">₹{{ number_format($subtotal, 0) }}</span>
             </div>
             <div class="flex justify-between mb-3 text-sm text-text-muted">

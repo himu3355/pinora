@@ -94,7 +94,7 @@
 
                     <div class="border-t border-border-gold mt-4 pt-4">
                         <div class="flex justify-between mb-2 text-sm text-text-muted">
-                            <span>Subtotal</span>
+                            <span>Taxable Amount</span>
                             <span>₹{{ number_format($subtotal, 0) }}</span>
                         </div>
 

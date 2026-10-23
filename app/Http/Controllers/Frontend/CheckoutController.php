@@ -46,14 +46,35 @@ class CheckoutController extends Controller
         $user      = auth()->user();
         $addresses = $user->addresses()->orderByDesc('is_default')->get();
 
-        // Default to IGST preview until address is selected
-        $gstBreakdown = [
-            'type'        => 'IGST',
-            'cgst'        => 0,
-            'sgst'        => 0,
-            'igst'        => $totals['gst_amount'],
-            'total'       => $totals['gst_amount'],
-        ];
+        // Resolve vendor state from first cart item if available
+        $vendorState = 'Maharashtra';
+        if (!empty($totals['items'])) {
+            $firstItem = reset($totals['items']);
+            $firstProduct = \App\Models\Product::find($firstItem['product_id']);
+            $vendorState = $firstProduct?->vendor?->state ?? 'Maharashtra';
+        }
+
+        // Calculate GST breakdown based on default address or fallback
+        $defaultAddress = $addresses->first();
+        if ($defaultAddress && !empty($defaultAddress->state)) {
+            $calculatedGst = $this->gst->calculate($totals['subtotal'], $vendorState, $defaultAddress->state);
+            $gstBreakdown = [
+                'type'  => $calculatedGst['type'],
+                'cgst'  => $calculatedGst['cgst'],
+                'sgst'  => $calculatedGst['sgst'],
+                'igst'  => $calculatedGst['igst'],
+                'total' => $calculatedGst['total_gst'],
+            ];
+        } else {
+            // Default to IGST preview until address is selected
+            $gstBreakdown = [
+                'type'  => 'igst',
+                'cgst'  => 0,
+                'sgst'  => 0,
+                'igst'  => $totals['gst_amount'],
+                'total' => $totals['gst_amount'],
+            ];
+        }
 
         return view('checkout.index', [
             'addresses'    => $addresses,

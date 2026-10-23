@@ -40,7 +40,7 @@
                             @if($item['variant_name'])
                             <div class="text-[0.8rem] text-text-muted mb-2">{{ $item['variant_name'] }}</div>
                             @endif
-                            <div class="text-xs text-text-muted">₹{{ number_format($item['unit_price'], 0) }} / piece</div>
+                            <div class="text-xs text-text-muted">₹{{ number_format($item['unit_price_inclusive'] ?? $item['unit_price'], 0) }} / piece</div>
                             <div class="text-[0.8rem] text-text-muted mt-1">{{ ucfirst($item['metal_type']) }} {{ $item['purity'] }}</div>
                         </div>
 
@@ -79,7 +79,7 @@
             <h3 class="font-primary text-xl mb-6 pb-3 border-b border-border-gold text-text-light">Order Summary</h3>
 
             <div class="flex justify-between mb-3 text-sm text-text-muted">
-                <span>Subtotal</span>
+                <span>Taxable Amount</span>
                 <span id="cart-summary-subtotal">₹{{ number_format($subtotal, 0) }}</span>
             </div>
             <div class="flex justify-between mb-3 text-sm text-text-muted">

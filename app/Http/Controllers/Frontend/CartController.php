@@ -79,11 +79,13 @@ class CartController extends Controller
         if ($request->expectsJson()) {
             $totals = $this->cart->totalsWithPricing($this->pricing);
             return response()->json([
-                'success' => true,
-                'count' => $this->cart->count(),
-                'items' => $totals['items'],
-                'subtotal' => $totals['subtotal'],
-                'message' => 'Product added to cart!'
+                'success'    => true,
+                'count'      => $this->cart->count(),
+                'items'      => $totals['items'],
+                'subtotal'   => $totals['subtotal'],
+                'gst_amount' => $totals['gst_amount'],
+                'total'      => $totals['total'],
+                'message'    => 'Product added to cart!'
             ]);
         }
 

@@ -4,7 +4,7 @@
     $pricingService = app(\App\Services\PricingService::class);
     $cartTotals = $cartService->totalsWithPricing($pricingService);
     $cartItems = $cartTotals['items'];
-    $cartSubtotal = $cartTotals['subtotal'];
+    $cartSubtotal = $cartTotals['total'];
     $cartCount = $cartService->count();
     $goldRate = \App\Models\MetalRate::getLatestRate('gold', '22K');
 @endphp
@@ -251,7 +251,7 @@
                                         <div class="min-w-0">
                                             <h4 class="text-xs font-semibold text-gray-900 truncate">{{ $item['product_name'] }}</h4>
                                             <p class="text-xs text-[#083B2B] font-bold mt-0.5">
-                                                {{ $item['quantity'] }} &times; ₹{{ number_format($item['unit_price'], 0) }}
+                                                {{ $item['quantity'] }} &times; ₹{{ number_format($item['unit_price_inclusive'] ?? $item['unit_price'], 0) }}
                                             </p>
                                         </div>
                                     </a>

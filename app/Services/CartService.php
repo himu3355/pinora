@@ -101,39 +101,55 @@ class CartService
 
     /**
      * Compute live prices for all items using PricingService.
+     * Option 2: All-inclusive retail pricing where displayed total matches product page,
+     * and subtotal/gst are clean pre-tax and tax components (no double tax).
      */
     public function totalsWithPricing(PricingService $pricing): array
     {
-        $subtotal = 0;
-        $items    = [];
+        $taxableSubtotal = 0.0;
+        $totalGst        = 0.0;
+        $grandTotal      = 0.0;
+        $items           = [];
 
         foreach ($this->items() as $key => $item) {
-            $product  = Product::active()->find($item['product_id']);
+            $product = Product::active()->find($item['product_id']);
             if (!$product) {
                 $this->remove($key);
                 continue;
             }
             $breakdown = $pricing->calculate($product, $item['variant_id'] ?? null);
 
-            $unitPrice = $breakdown ? $breakdown['final_price'] : 0;
-            $lineTotal = $unitPrice * $item['quantity'];
-            $subtotal += $lineTotal;
+            // Final consumer inclusive unit price (e.g. ₹10,300)
+            $inclusiveUnitPrice = $breakdown ? (float) $breakdown['final_price'] : 0.0;
+
+            // Taxable unit price before 3% GST (e.g. ₹10,000)
+            $taxableUnitPrice = isset($breakdown['subtotal']) && $breakdown['subtotal'] > 0
+                ? (float) $breakdown['subtotal']
+                : round($inclusiveUnitPrice / 1.03, 2);
+
+            $lineTaxable   = round($taxableUnitPrice * $item['quantity'], 2);
+            $lineInclusive = round($inclusiveUnitPrice * $item['quantity'], 2);
+            $lineGst       = round($lineInclusive - $lineTaxable, 2);
+
+            $taxableSubtotal += $lineTaxable;
+            $totalGst        += $lineGst;
+            $grandTotal      += $lineInclusive;
 
             $items[$key] = array_merge($item, [
-                'unit_price' => $unitPrice,
-                'line_total' => $lineTotal,
-                'pricing'    => $breakdown,
+                'unit_price'           => $taxableUnitPrice,       // Pre-tax base for order/tax calculations
+                'unit_price_inclusive' => $inclusiveUnitPrice,     // Inclusive display price
+                'line_total'           => $lineInclusive,          // Inclusive line total matching product page
+                'taxable_line_total'   => $lineTaxable,
+                'gst_amount'           => $lineGst,
+                'pricing'              => $breakdown,
             ]);
         }
 
-        $gstAmount = round($subtotal * 0.03, 2);
-        $total     = $subtotal + $gstAmount;
-
         return [
             'items'      => $items,
-            'subtotal'   => $subtotal,
-            'gst_amount' => $gstAmount,
-            'total'      => $total,
+            'subtotal'   => round($taxableSubtotal, 2),
+            'gst_amount' => round($totalGst, 2),
+            'total'      => round($grandTotal, 2),
         ];
     }
 }

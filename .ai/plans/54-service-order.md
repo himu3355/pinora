@@ -76,54 +76,60 @@ class OrderService
                     );
                 }
 
-                $lineSubtotal = round((float) $item['unit_price'] * $item['quantity'] / $this->gst->getMultiplier(), 2);
+                $lineSubtotal = round((float) $item['unit_price'] * $item['quantity'], 2);
                 $subtotal    += $lineSubtotal;
 
+                // Calculate GST for this item based on vendor's state vs shipping state
+                $vendor = $product->vendor;
+                $vendorState = $vendor->state ?? 'Maharashtra'; // fallback to platform state if not set
+                $itemGst = $this->gst->calculate($lineSubtotal, $vendorState, $address->state);
+
+                $cgstTotal += $itemGst['cgst'];
+                $sgstTotal += $itemGst['sgst'];
+                $igstTotal += $itemGst['igst'];
+
                 $lineData[$key] = [
-                    'product'      => $product,
-                    'variant'      => $variant,
-                    'item'         => $item,
-                    'line_subtotal'=> $lineSubtotal,
+                    'product'       => $product,
+                    'variant'       => $variant,
+                    'item'          => $item,
+                    'line_subtotal' => $lineSubtotal,
+                    'item_gst'      => $itemGst,
                 ];
             }
 
-            // ── 2. GST calculation ────────────────────────────────────────
-            $gstBreakdown = $this->gst->calculate($subtotal, $address->state);
-            $totalAmount  = $gstBreakdown['grand_total'];
+            $totalAmount = round($subtotal + $cgstTotal + $sgstTotal + $igstTotal, 2);
 
-            // ── 3. Create Order ───────────────────────────────────────────
+            // ── 2. Create Order ───────────────────────────────────────────
             $order = Order::create([
-                'user_id'               => $user->id,
-                'status'                => 'pending',
-                'payment_method'        => $paymentMethod,
-                'payment_status'        => $paymentMethod === 'cod' ? 'pending' : 'pending',
-                'subtotal'              => $subtotal,
-                'discount_amount'       => 0,
-                'cgst_amount'           => $gstBreakdown['cgst'],
-                'sgst_amount'           => $gstBreakdown['sgst'],
-                'igst_amount'           => $gstBreakdown['igst'],
-                'total_amount'          => $totalAmount,
-                'notes'                 => null,
+                'user_id'                 => $user->id,
+                'status'                  => 'pending',
+                'payment_method'          => $paymentMethod,
+                'payment_status'          => 'pending',
+                'subtotal'                => $subtotal,
+                'discount_amount'         => 0.0,
+                'cgst_amount'             => $cgstTotal,
+                'sgst_amount'             => $sgstTotal,
+                'igst_amount'             => $igstTotal,
+                'total_amount'            => $totalAmount,
+                'notes'                   => null,
                 // Shipping address snapshot
-                'shipping_full_name'    => $address->full_name,
-                'shipping_phone'        => $address->phone,
+                'shipping_name'           => $address->full_name,
+                'shipping_phone'          => $address->phone,
                 'shipping_address_line_1' => $address->address_line_1,
                 'shipping_address_line_2' => $address->address_line_2,
-                'shipping_landmark'     => $address->landmark,
-                'shipping_city'         => $address->city,
-                'shipping_state'        => $address->state,
-                'shipping_pincode'      => $address->pincode,
-                'shipping_country'      => $address->country ?? 'India',
+                'shipping_landmark'       => $address->landmark,
+                'shipping_city'           => $address->city,
+                'shipping_state'          => $address->state,
+                'shipping_pincode'        => $address->pincode,
+                'shipping_country'        => $address->country ?? 'India',
             ]);
 
-            // ── 4. Create OrderItems, deduct stock, record commissions ────
+            // ── 3. Create OrderItems and deduct stock ────
             foreach ($lineData as $data) {
                 $product = $data['product'];
                 $variant = $data['variant'];
                 $item    = $data['item'];
-
-                // Per-item GST (proportional)
-                $itemGst = $this->gst->calculate($data['line_subtotal'], $address->state);
+                $itemGst = $data['item_gst'];
 
                 $orderItem = OrderItem::create([
                     'order_id'          => $order->id,
@@ -138,12 +144,15 @@ class OrderService
                     'weight_grams'      => $variant ? $variant->weight_grams : $product->weight_grams,
                     'making_charges'    => $variant ? $variant->making_charges : $product->making_charges,
                     'quantity'          => $item['quantity'],
-                    'unit_price'        => round($item['unit_price'] / $this->gst->getMultiplier(), 2),
+                    'unit_price'        => round($item['unit_price'], 2),
                     'subtotal'          => $data['line_subtotal'],
+                    'cgst_rate'         => $itemGst['type'] === 'split' ? 1.5 : 0.0,
+                    'sgst_rate'         => $itemGst['type'] === 'split' ? 1.5 : 0.0,
+                    'igst_rate'         => $itemGst['type'] === 'igst'  ? 3.0 : 0.0,
                     'cgst_amount'       => $itemGst['cgst'],
                     'sgst_amount'       => $itemGst['sgst'],
                     'igst_amount'       => $itemGst['igst'],
-                    'total_price'       => $itemGst['grand_total'] * ($item['quantity'] > 1 ? 1 : 1), // already per-unit * qty handled by subtotal
+                    'total_price'       => $itemGst['grand_total'],
                     'fulfillment_status'=> 'pending',
                 ]);
 

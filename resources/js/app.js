@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Helper to rebuild cart dropdown menu dynamically
-    function rebuildCartDropdown(items, subtotal) {
+    function rebuildCartDropdown(items, total) {
         const itemsList = document.querySelector('.cart-dropdown-items-list');
         const emptyState = document.querySelector('.cart-dropdown-empty-state');
         const footer = document.querySelector('.cart-dropdown-footer');
@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
             itemsList.classList.remove('hidden');
             footer.classList.remove('hidden');
             if (subtotalEl) {
-                subtotalEl.textContent = '₹' + parseFloat(subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                subtotalEl.textContent = '₹' + parseFloat(total).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
             }
             
             let html = '';
@@ -526,7 +526,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const variantNameHtml = item.variant_name 
                     ? `<p class="text-[0.7rem] text-gray-400 truncate">${item.variant_name}</p>` 
                     : '';
-                const unitPriceFormatted = parseFloat(item.unit_price).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const unitPrice = item.unit_price_inclusive !== undefined ? item.unit_price_inclusive : item.unit_price;
+                const unitPriceFormatted = parseFloat(unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 
                 html += `
                     <div class="flex items-center justify-between gap-3 py-1.5 hover:bg-gray-50 rounded px-2" data-cart-item="${key}">
@@ -563,23 +564,29 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalEl) totalEl.textContent = formatPrice(total);
     }
 
-    // Intercept Add to Cart form submission
-    const addToCartForm = document.getElementById('add-to-cart-form');
-    if (addToCartForm) {
-        addToCartForm.addEventListener('submit', async (e) => {
+    // Intercept Add to Cart form submission (desktop and mobile)
+    const cartForms = [
+        document.getElementById('add-to-cart-form'),
+        document.getElementById('mobile-add-cart-form')
+    ].filter(Boolean);
+
+    cartForms.forEach(form => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Sync quantity value
-            const qtyInput = document.getElementById('qty-input');
-            const formQtyInput = document.getElementById('form_qty');
-            if (qtyInput && formQtyInput) {
-                formQtyInput.value = qtyInput.value;
+            // Sync quantity value for desktop form if present
+            if (form.id === 'add-to-cart-form') {
+                const qtyInput = document.getElementById('qty-input');
+                const formQtyInput = document.getElementById('form_qty');
+                if (qtyInput && formQtyInput) {
+                    formQtyInput.value = qtyInput.value;
+                }
             }
             
-            const formData = new FormData(addToCartForm);
-            const action = addToCartForm.getAttribute('action');
+            const formData = new FormData(form);
+            const action = form.getAttribute('action');
             
-            const btn = addToCartForm.querySelector('button[type="submit"]');
+            const btn = form.querySelector('button[type="submit"]');
             const originalText = btn ? btn.textContent : '';
             if (btn) {
                 btn.disabled = true;
@@ -604,18 +611,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
                 if (data.success) {
                     updateCartBadges(data.count);
-                    rebuildCartDropdown(data.items, data.subtotal);
+                    rebuildCartDropdown(data.items, data.total !== undefined ? data.total : data.subtotal);
                     
                     if (btn) {
                         btn.textContent = 'Added!';
-                        btn.classList.remove('btn-gold');
+                        const isGold = btn.classList.contains('btn-gold');
+                        if (isGold) {
+                            btn.classList.remove('btn-gold');
+                        }
                         btn.classList.add('bg-green-600', 'text-white');
                         setTimeout(() => {
                             btn.disabled = false;
                             btn.textContent = originalText;
-                            btn.classList.add('btn-gold');
+                            if (isGold) {
+                                btn.classList.add('btn-gold');
+                            }
                             btn.classList.remove('bg-green-600', 'text-white');
                         }, 2000);
+                    }
+                } else if (data.message) {
+                    alert(data.message);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
                     }
                 }
             } catch (err) {
@@ -626,7 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-    }
+    });
 
     // Event delegation for Wishlist Dropdown Removals
     document.addEventListener('click', async (e) => {
@@ -695,7 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 if (data.success) {
                     updateCartBadges(data.count);
-                    rebuildCartDropdown(data.items, data.subtotal);
+                    rebuildCartDropdown(data.items, data.total !== undefined ? data.total : data.subtotal);
                     
                     // Synchronize with /cart page if the user is currently on it
                     const cartPageItemRow = document.querySelector(`.cart-item-row[data-cart-item="${key}"]`);
@@ -751,7 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 if (data.success) {
                     updateCartBadges(data.count);
-                    rebuildCartDropdown(data.items, data.subtotal);
+                    rebuildCartDropdown(data.items, data.total !== undefined ? data.total : data.subtotal);
                     
                     if (data.quantity <= 0) {
                         const vendorGroup = itemRow.closest('.vendor-group');
@@ -822,7 +840,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await res.json();
                 if (data.success) {
                     updateCartBadges(data.count);
-                    rebuildCartDropdown(data.items, data.subtotal);
+                    rebuildCartDropdown(data.items, data.total !== undefined ? data.total : data.subtotal);
                     
                     const vendorGroup = itemRow.closest('.vendor-group');
                     itemRow.remove();
